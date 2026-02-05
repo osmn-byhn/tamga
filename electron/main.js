@@ -59,7 +59,7 @@ async function createWindow() {
   const iconPath = path.join(process.env.VITE_PUBLIC, "sphinxpass.png");
   console.log("Icon path:", iconPath);
   console.log("Icon exists:", fs.existsSync(iconPath));
-  
+
   win = new BrowserWindow({
     title: "Sphinx Pass",
     width: 1200,
@@ -72,6 +72,37 @@ async function createWindow() {
       contextIsolation: true,
       webSecurity: false, // Allow loading from dev server
     },
+  });
+
+  // Enable screen capture
+  win.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
+    // Automatically allow the first source (usually the entire screen)
+    // Or open a picker if multiple sources needed. 
+    // For "Select Region" logic in frontend, user usually wants the whole screen first.
+    // However, Electron requires us to select a source.
+    // We can list sources and pick the first one (screen) or show a default picker.
+    // Let's use the default picker for now as it's safest, or auto-select the first screen.
+
+    // Simple implementation: grant access to the first screen available
+    // desktopCapturer is needed in main process to list sources if we want to auto-select
+    // But request handler uses a different callback structure. 
+
+    // To show standard picker:
+    // callback({ video: request.video, audio: request.audio }); 
+    // BUT we need to select a specific sourceId. 
+
+    // Let's try to find a screen source.
+    import('electron').then(({ desktopCapturer }) => {
+      desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+        // Find the primary display or just take the first one
+        if (sources.length > 0) {
+          callback({ video: sources[0], audio: 'loopback' });
+        } else {
+          // Fallback to standard picker if no screen found (unlikely)
+          callback(null);
+        }
+      });
+    });
   });
 
   // Test active push message to Renderer-process
