@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, ShieldCheck } from "lucide-react";
+import { Plus, ShieldCheck, Key } from "lucide-react";
 import PasskeyCard from "@/components/PasskeyCard";
 import AddPasskeyDialog from "@/components/AddPasskeyDialog";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ const Passkeys = () => {
     await updateData("sphinx-passkeys", newPasskeys);
   };
 
-  const handleAddPasskey = async (label, secret) => {
+  const handleAddPasskey = async ({ label, secret }) => {
     const newPasskey = {
       id: Date.now(),
       label,
@@ -59,7 +59,7 @@ const Passkeys = () => {
             </h1>
             <p className="text-muted-foreground mt-1">Securely store your recovery codes and text secrets.</p>
           </div>
-          <AddPasskeyDialog onAdd={handleAdd}>
+          <AddPasskeyDialog onAdd={handleAddPasskey}>
             <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all bg-purple-600 hover:bg-purple-700">
               <Plus className="h-5 w-5" />
               Add New Secret
@@ -76,14 +76,14 @@ const Passkeys = () => {
             <p className="text-muted-foreground max-w-sm mx-auto mb-6">
               Keep your backup codes and recovery keys safe here.
             </p>
-            <AddPasskeyDialog onAdd={handleAdd}>
-              <Button variant="outline" className="border-gray-700 text-black hover:bg-gray-200">Store your first secret</Button>
+            <AddPasskeyDialog onAdd={handleAddPasskey}>
+              <Button variant="outline" className="border-gray-700 cursor-pointer text-black dark:border-gray-300 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800">Store your first secret</Button>
             </AddPasskeyDialog>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {passkeys.map((item) => (
-              <PasskeyCard key={item.id} passkey={item} onDelete={handleDelete} />
+              <PasskeyCard key={item.id} passkey={item} onDelete={handleDeletePasskey} />
             ))}
           </div>
         )}

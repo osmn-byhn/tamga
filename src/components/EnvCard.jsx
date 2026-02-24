@@ -20,7 +20,10 @@ const EnvCard = ({ envItem, onDelete }) => {
     };
 
     // Preview first 3 lines
-    const previewContent = envItem.content.split("\n").slice(0, 3).join("\n") + (envItem.content.split("\n").length > 3 ? "\n..." : "");
+    const content = typeof envItem.content === 'string' ? envItem.content : "";
+    const lines = content.split("\n");
+    const previewContent = lines.slice(0, 3).join("\n") + (lines.length > 3 ? "\n..." : "");
+    const projectName = typeof envItem.projectName === 'object' ? (envItem.projectName.projectName || "Unknown") : (envItem.projectName || "Untitled Project");
 
     return (
         <>
@@ -32,8 +35,8 @@ const EnvCard = ({ envItem, onDelete }) => {
                                 <div className="p-2 rounded-full bg-green-500/10 text-green-500">
                                     <Terminal className="h-4 w-4" />
                                 </div>
-                                <h3 className="text-lg font-bold truncate text-foreground" title={envItem.projectName}>
-                                    {envItem.projectName}
+                                <h3 className="text-lg font-bold truncate text-foreground" title={projectName}>
+                                    {projectName}
                                 </h3>
                             </div>
 
@@ -89,11 +92,11 @@ const EnvCard = ({ envItem, onDelete }) => {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <FileJson className="h-5 w-5 text-green-500" />
-                            {envItem.projectName} - .env content
+                            {projectName} - .env content
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto bg-muted p-4 rounded-md border border-border mt-2">
-                        <pre className="font-mono text-sm text-foreground whitespace-pre-wrap">{envItem.content}</pre>
+                        <pre className="font-mono text-sm text-foreground whitespace-pre-wrap">{content}</pre>
                     </div>
                     <div className="flex justify-end pt-2">
                         <Button onClick={copyToClipboard} className="bg-green-600 hover:bg-green-700 text-white gap-2">

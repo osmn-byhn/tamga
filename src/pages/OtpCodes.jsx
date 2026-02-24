@@ -70,7 +70,7 @@ const OtpCodes = () => {
               Add your first Two-Factor Authentication account to get started.
             </p>
             <AddOtpDialog onAdd={handleAddOtp}>
-              <Button variant="secondary">Add your first account</Button>
+              <Button variant="secondary" className="border-gray-700 cursor-pointer text-black dark:border-gray-300 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800">Add your first account</Button>
             </AddOtpDialog>
           </div>
         ) : (

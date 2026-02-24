@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Copy, RefreshCw, Check, Save, Trash2 } from "lucide-react";
+import { Copy, RefreshCw, Check, Save, Trash2, Globe, User, Pencil, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +23,15 @@ export default function Passwords() {
   const [includeSymbols, setIncludeSymbols] = useState(true);
 
   const [password, setPassword] = useState("");
+  const [platform, setPlatform] = useState("");
+  const [username, setUsername] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Edit state
+  const [editingId, setEditingId] = useState(null);
+  const [editPlatform, setEditPlatform] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     const loadPasswords = async () => {
@@ -44,10 +54,14 @@ export default function Passwords() {
     const newEntry = {
       id: Date.now(),
       value: pwd,
+      platform: platform.trim(),
+      username: username.trim(),
       createdAt: new Date().toISOString()
     };
     const updated = [newEntry, ...passwords];
     await savePasswords(updated);
+    setPlatform("");
+    setUsername("");
     toast.success("Password saved to history");
   };
 
@@ -55,6 +69,32 @@ export default function Passwords() {
     const updated = passwords.filter(p => p.id !== id);
     await savePasswords(updated);
     toast.success("Password removed");
+  };
+
+  const startEdit = (item) => {
+    setEditingId(item.id);
+    setEditPlatform(item.platform || "");
+    setEditUsername(item.username || "");
+    setEditValue(item.value);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const updatePassword = async (id) => {
+    if (!editValue.trim()) {
+      toast.error("Password cannot be empty");
+      return;
+    }
+    const updated = passwords.map(p =>
+      p.id === id
+        ? { ...p, platform: editPlatform.trim(), username: editUsername.trim(), value: editValue.trim() }
+        : p
+    );
+    await savePasswords(updated);
+    setEditingId(null);
+    toast.success("Password updated");
   };
 
   // Strength calculation
@@ -126,37 +166,71 @@ export default function Passwords() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="relative">
-                  <div className="bg-muted p-6 rounded-lg font-mono text-2xl text-center break-all select-all min-h-[5rem] flex items-center justify-center pr-24">
-                    {password}
-                  </div>
-                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                  <Input
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setCopied(false);
+                    }}
+                    className="bg-muted h-20 rounded-lg font-mono text-2xl text-center break-all pr-24 border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                  <div className="absolute top-4 right-4 flex items-center gap-3">
                     <Button
-                      size="icon"
                       variant="ghost"
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground h-12 w-12"
                       onClick={() => savePasswordToHistory(password)}
                       disabled={!password}
                       title="Save to History"
                     >
-                      <Save className="h-5 w-5" />
+                      <Save size={28} />
                     </Button>
                     <Button
-                      size="icon"
                       variant="ghost"
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground h-12 w-12"
                       onClick={copyToClipboard}
                       title="Copy Password"
                     >
-                      {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+                      {copied ? <Check size={28} className="text-green-500" /> : <Copy size={28} />}
                     </Button>
                   </div>
                 </div>
 
                 {password && (
-                  <div className="flex items-center justify-between px-2">
-                    <span className="text-sm text-muted-foreground">Strength</span>
-                    <span className={`text-sm font-bold ${strength.color}`}>{strength.text}</span>
-                  </div>
+                  <>
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="platform" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Platform</Label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Input
+                            id="platform"
+                            placeholder="e.g. Google"
+                            value={platform}
+                            onChange={(e) => setPlatform(e.target.value)}
+                            className="pl-9 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="username" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Username</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Input
+                            id="username"
+                            placeholder="Username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            className="pl-9 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-2 pt-2">
+                      <span className="text-sm text-muted-foreground">Strength</span>
+                      <span className={`text-sm font-bold ${strength.color}`}>{strength.text}</span>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -223,10 +297,10 @@ export default function Passwords() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </div >
 
         {/* History Section */}
-        <div className="grid grid-cols-1 gap-8 mt-8">
+        < div className="grid grid-cols-1 gap-8 mt-8" >
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle>Password History</CardTitle>
@@ -237,28 +311,105 @@ export default function Passwords() {
               ) : (
                 <div className="space-y-4">
                   {passwords.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
-                      <div className="font-mono break-all mr-4">{item.value}</div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-foreground"
-                          onClick={() => {
-                            navigator.clipboard.writeText(item.value);
-                            toast.success("Copied to clipboard");
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-red-500"
-                          onClick={() => deletePassword(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    <div key={item.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-border bg-muted/30 gap-4 transition-all duration-200">
+                      {editingId === item.id ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
+                          <div className="relative">
+                            <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              value={editPlatform}
+                              onChange={(e) => setEditPlatform(e.target.value)}
+                              placeholder="Platform"
+                              className="pl-10 h-10"
+                            />
+                          </div>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              value={editUsername}
+                              onChange={(e) => setEditUsername(e.target.value)}
+                              placeholder="Username"
+                              className="pl-10 h-10"
+                            />
+                          </div>
+                          <div className="relative">
+                            <Input
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              placeholder="Password"
+                              className="font-mono h-10"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            {item.platform && (
+                              <span className="text-xs font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                                {item.platform}
+                              </span>
+                            )}
+                            {item.username && (
+                              <span className="text-xs text-muted-foreground">
+                                ({item.username})
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-mono break-all text-lg">{item.value}</div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                        {editingId === item.id ? (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                              onClick={() => updatePassword(item.id)}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-foreground"
+                              onClick={cancelEdit}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-foreground"
+                              onClick={() => startEdit(item)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-foreground"
+                              onClick={() => {
+                                navigator.clipboard.writeText(item.value);
+                                toast.success("Copied to clipboard");
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                              onClick={() => deletePassword(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -266,8 +417,8 @@ export default function Passwords() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
-    </div>
+        </div >
+      </div >
+    </div >
   );
 }

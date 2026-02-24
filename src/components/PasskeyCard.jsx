@@ -22,8 +22,8 @@ const PasskeyCard = ({ passkey, onDelete }) => {
                             <div className="p-2 rounded-full bg-purple-500/10 text-purple-500">
                                 <KeyRound className="h-4 w-4" />
                             </div>
-                            <h3 className="text-lg font-bold truncate text-foreground" title={passkey.label}>
-                                {passkey.label}
+                            <h3 className="text-lg font-bold truncate text-foreground" title={typeof passkey.label === 'object' ? passkey.label.label : passkey.label}>
+                                {typeof passkey.label === 'object' ? passkey.label.label : passkey.label}
                             </h3>
                         </div>
 

@@ -29,7 +29,7 @@ const Envs = () => {
     await updateData("sphinx-envs", newItems);
   };
 
-  const handleAddEnv = async (projectName, content) => {
+  const handleAddEnv = async ({ projectName, content }) => {
     const newItem = {
       id: Date.now(),
       projectName,
@@ -76,7 +76,7 @@ const Envs = () => {
               Store your local .env configurations for easy access.
             </p>
             <AddEnvDialog onAdd={handleAddEnv}>
-              <Button variant="outline" className="border-gray-700 text-black hover:bg-gray-200">Add project config</Button>
+              <Button variant="outline" className="border-gray-700 cursor-pointer text-black dark:border-gray-300 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800">Add project config</Button>
             </AddEnvDialog>
           </div>
         ) : (

@@ -90,6 +90,11 @@ export function AuthProvider({ children }) {
             const ivArray = new Uint8Array(iv);
             const dataArray = new Uint8Array(data);
 
+            // AES-GCM tag is usually 16 bytes. If data is smaller, decryption will fail anyway.
+            if (dataArray.length < 16) {
+                throw new Error("Encrypted data is too small or corrupted");
+            }
+
             const decrypted = await crypto.subtle.decrypt(
                 { name: "AES-GCM", iv: ivArray },
                 key,
