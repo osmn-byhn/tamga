@@ -64,7 +64,7 @@ const Settings = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `sphinx-backup-${new Date().toISOString().slice(0, 10)}.enc`;
+    a.download = `tamga-backup-${new Date().toISOString().slice(0, 10)}.enc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

@@ -15,7 +15,7 @@ const Envs = () => {
   useEffect(() => {
     const loadEnvs = async () => {
       setLoading(true);
-      const data = await getData("sphinx-envs");
+      const data = await getData("tamga-envs");
       if (data) {
         setEnvItems(data);
       }
@@ -26,7 +26,7 @@ const Envs = () => {
 
   const saveEnvs = async (newItems) => {
     setEnvItems(newItems);
-    await updateData("sphinx-envs", newItems);
+    await updateData("tamga-envs", newItems);
   };
 
   const handleAddEnv = async ({ projectName, content }) => {

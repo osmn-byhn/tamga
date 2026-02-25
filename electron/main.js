@@ -56,12 +56,12 @@ const preload = path.join(__dirname, "preload.js");
 const indexHtml = path.join(RENDERER_DIST, "index.html");
 
 async function createWindow() {
-  const iconPath = path.join(process.env.VITE_PUBLIC, "sphinxpass.png");
+  const iconPath = path.join(process.env.VITE_PUBLIC, "tamga.png");
   console.log("Icon path:", iconPath);
   console.log("Icon exists:", fs.existsSync(iconPath));
 
   win = new BrowserWindow({
-    title: "Sphinx Pass",
+    title: "Tamga",
     width: 1200,
     height: 800,
     icon: iconPath,

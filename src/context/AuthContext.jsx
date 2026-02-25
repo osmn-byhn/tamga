@@ -20,22 +20,44 @@ export function AuthProvider({ children }) {
     const [encryptionKey, setEncryptionKey] = useState(null);
 
     useEffect(() => {
-        // Check if secure storage is initialized
-        const salt = localStorage.getItem("sphinx-salt");
-        const validator = localStorage.getItem("sphinx-validator");
+        // 1. One-time Migration from Sphinx to Tamga
+        const keysToMigrate = [
+            { old: "sphinx-salt", new: "tamga-salt" },
+            { old: "sphinx-validator", new: "tamga-validator" },
+            { old: "otp-auth-uris", new: "tamga-otp-uris" },
+            { old: "sphinx-passwords", new: "tamga-passwords" },
+            { old: "sphinx-passkeys", new: "tamga-passkeys" },
+            { old: "sphinx-envs", new: "tamga-envs" }
+        ];
+
+        let migrated = false;
+        keysToMigrate.forEach(({ old, new: newKey }) => {
+            const data = localStorage.getItem(old);
+            if (data && !localStorage.getItem(newKey)) {
+                localStorage.setItem(newKey, data);
+                // We keep old data for safety for now, or remove it?
+                // Let's remove it to avoid confusion after successful move.
+                localStorage.removeItem(old);
+                migrated = true;
+            }
+        });
+
+        if (migrated) {
+            console.log("Data migrated from Sphinx to Tamga successfully");
+        }
+
+        // 2. Check if secure storage is initialized
+        const salt = localStorage.getItem("tamga-salt");
+        const validator = localStorage.getItem("tamga-validator");
 
         if (salt && validator) {
             setHasPassword(true);
             setIsLocked(true);
         } else {
-            // Fallback check for old auth (migration could go here, but we'll prioritize new setup)
-            const oldHash = localStorage.getItem("sphinx-app-lock");
-            if (oldHash) {
-                // Nuke old data strictly as per plan for clean slate
-                localStorage.removeItem("sphinx-app-lock");
-                setHasPassword(false);
-                setIsLocked(false);
-            }
+            // Nuke any remnants
+            localStorage.removeItem("sphinx-app-lock");
+            setHasPassword(false);
+            setIsLocked(false);
         }
     }, []);
 
@@ -119,8 +141,8 @@ export function AuthProvider({ children }) {
         const encryptedValidator = await encryptData(validatorToken, key);
 
         // Save auth data
-        localStorage.setItem("sphinx-salt", JSON.stringify(Array.from(salt)));
-        localStorage.setItem("sphinx-validator", encryptedValidator);
+        localStorage.setItem("tamga-salt", JSON.stringify(Array.from(salt)));
+        localStorage.setItem("tamga-validator", encryptedValidator);
 
         setEncryptionKey(key);
         setHasPassword(true);
@@ -129,8 +151,8 @@ export function AuthProvider({ children }) {
 
     const unlock = async (password) => {
         try {
-            const saltJson = localStorage.getItem("sphinx-salt");
-            const encryptedValidator = localStorage.getItem("sphinx-validator");
+            const saltJson = localStorage.getItem("tamga-salt");
+            const encryptedValidator = localStorage.getItem("tamga-validator");
 
             if (!saltJson || !encryptedValidator) return true; // Should ideally be handled
 
@@ -191,7 +213,7 @@ export function AuthProvider({ children }) {
     const exportData = async () => {
         if (!encryptionKey) return null;
 
-        const keysToExport = ["otp-auth-uris", "sphinx-passwords", "sphinx-passkeys", "sphinx-envs"];
+        const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs"];
         const exportObj = {
             version: 1,
             timestamp: Date.now(),

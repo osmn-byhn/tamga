@@ -1,7 +1,7 @@
 /** @type {import('electron-builder').Configuration} */
 export default {
-  appId: 'com.sphinxpass.app',
-  productName: 'SphinxPass',
+  appId: 'com.tamga.app',
+  productName: 'Tamga',
   directories: {
     output: 'release',
     buildResources: 'build',
@@ -13,15 +13,15 @@ export default {
   ],
   win: {
     target: ['nsis'],
-    icon: 'public/sphinxpass.png',
+    icon: 'public/tamga.png',
   },
   linux: {
     target: ['AppImage', 'deb'],
-    icon: 'public/sphinxpass.png',
+    icon: 'public/tamga.png',
   },
   mac: {
     target: ['dmg'],
-    icon: 'public/sphinxpass.png',
+    icon: 'public/tamga.png',
   },
   nsis: {
     oneClick: false,

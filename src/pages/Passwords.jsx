@@ -36,7 +36,7 @@ export default function Passwords() {
   useEffect(() => {
     const loadPasswords = async () => {
       setLoading(true);
-      const data = await getData("sphinx-passwords");
+      const data = await getData("tamga-passwords");
       if (data) {
         setPasswords(data);
       }
@@ -47,7 +47,7 @@ export default function Passwords() {
 
   const savePasswords = async (newPasswords) => {
     setPasswords(newPasswords);
-    await updateData("sphinx-passwords", newPasswords);
+    await updateData("tamga-passwords", newPasswords);
   };
 
   const savePasswordToHistory = async (pwd) => {

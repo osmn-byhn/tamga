@@ -15,7 +15,7 @@ const OtpCodes = () => {
   useEffect(() => {
     const loadOtps = async () => {
       setLoading(true);
-      const data = await getData("otp-auth-uris");
+      const data = await getData("tamga-otp-uris");
       if (data) {
         setOtpUris(data);
       }
@@ -26,7 +26,7 @@ const OtpCodes = () => {
 
   const saveOtps = async (uris) => {
     setOtpUris(uris);
-    await updateData("otp-auth-uris", uris);
+    await updateData("tamga-otp-uris", uris);
   };
 
   const handleAddOtp = async (uri) => {

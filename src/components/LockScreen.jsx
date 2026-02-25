@@ -28,7 +28,7 @@ const LockScreen = () => {
                         <Lock className="h-10 w-10" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight text-foreground">App Locked</h2>
-                    <p className="text-muted-foreground text-center">Enter your master password to unlock SphinxPass</p>
+                    <p className="text-muted-foreground text-center">Enter your master password to unlock Tamga</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">

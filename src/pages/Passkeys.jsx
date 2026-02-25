@@ -16,7 +16,7 @@ const Passkeys = () => {
   useEffect(() => {
     const loadPasskeys = async () => {
       setLoading(true);
-      const data = await getData("sphinx-passkeys");
+      const data = await getData("tamga-passkeys");
       if (data) {
         setPasskeys(data);
       }
@@ -27,7 +27,7 @@ const Passkeys = () => {
 
   const savePasskeys = async (newPasskeys) => {
     setPasskeys(newPasskeys);
-    await updateData("sphinx-passkeys", newPasskeys);
+    await updateData("tamga-passkeys", newPasskeys);
   };
 
   const handleAddPasskey = async ({ label, secret }) => {
