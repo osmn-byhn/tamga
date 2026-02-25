@@ -364,11 +364,61 @@ export function AuthProvider({ children }) {
                 return false;
             }
 
-            for (const [key, value] of Object.entries(decryptedObj.data)) {
-                await updateData(key, value);
+            const mergeStats = { added: 0, skipped: 0 };
+            for (const [key, incomingValue] of Object.entries(decryptedObj.data)) {
+                // If the data is not an array, just overwrite (e.g. system settings)
+                if (!Array.isArray(incomingValue)) {
+                    await updateData(key, incomingValue);
+                    continue;
+                }
+
+                const localValue = await getData(key) || [];
+                const merged = [...localValue];
+
+                for (const item of incomingValue) {
+                    let isDuplicate = false;
+
+                    if (key === "tamga-otp-uris") {
+                        isDuplicate = localValue.includes(item);
+                    } else if (key === "tamga-passwords") {
+                        isDuplicate = localValue.some(p =>
+                            p.platform === item.platform &&
+                            p.username === item.username &&
+                            p.value === item.value
+                        );
+                    } else if (key === "tamga-envs") {
+                        isDuplicate = localValue.some(e =>
+                            e.projectName === item.projectName &&
+                            e.content === item.content
+                        );
+                    } else if (key === "tamga-passkeys") {
+                        isDuplicate = localValue.some(pk =>
+                            pk.label === item.label &&
+                            pk.secret === item.secret
+                        );
+                    }
+
+                    if (isDuplicate) {
+                        mergeStats.skipped++;
+                    } else {
+                        // Ensure unique ID for the local machine to avoid collisions
+                        const newItem = (typeof item === 'object' && item !== null)
+                            ? { ...item, id: Date.now() + Math.random() }
+                            : item;
+                        merged.push(newItem);
+                        mergeStats.added++;
+                    }
+                }
+                await updateData(key, merged);
             }
 
-            toast.success("Data imported successfully");
+            if (mergeStats.added > 0 || mergeStats.skipped > 0) {
+                toast.success(`Import complete`, {
+                    description: `${mergeStats.added} new items added, ${mergeStats.skipped} duplicates skipped.`
+                });
+            } else {
+                toast.success("Data imported successfully");
+            }
             return true;
         } catch (e) {
             console.error("[Import] GLOBAL ERROR", e);
