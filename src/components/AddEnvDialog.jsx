@@ -51,7 +51,7 @@ const AddEnvDialog = ({ onAdd, children }) => {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger>
+            <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
