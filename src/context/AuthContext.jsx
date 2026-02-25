@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
         });
 
         if (migrated) {
-            console.log("Data migrated from Sphinx to Tamga successfully");
+            console.log("Data migrated to Tamga successfully");
         }
 
         // 2. Check if secure storage is initialized
@@ -137,7 +137,7 @@ export function AuthProvider({ children }) {
         const key = await deriveKey(password, salt);
 
         // Create validator token
-        const validatorToken = "sphinx-valid-token";
+        const validatorToken = "tamga-valid-token";
         const encryptedValidator = await encryptData(validatorToken, key);
 
         // Save auth data
@@ -161,7 +161,7 @@ export function AuthProvider({ children }) {
 
             const validation = await decryptData(encryptedValidator, key);
 
-            if (validation === "sphinx-valid-token") {
+            if (validation === "tamga-valid-token" || validation === "sphinx-valid-token") {
                 setEncryptionKey(key);
                 setIsLocked(false);
                 return true;
