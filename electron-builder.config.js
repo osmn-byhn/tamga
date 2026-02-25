@@ -8,25 +8,27 @@ export default {
   },
   files: [
     'dist/**/*',
-    'dist-electron/**/*',
+    'electron/**/*',
     'package.json',
   ],
-  win: {
-    target: ['nsis'],
-    icon: 'public/tamga.png',
-  },
   linux: {
-    target: ['AppImage', 'deb'],
+    target: ['rpm', 'AppImage'],
+    category: 'Security',
     icon: 'public/tamga.png',
+    maintainer: 'Tamga Team <contact@tamga.app>',
+    vendor: 'Tamga Team',
+    synopsis: 'Secure local-first vault.',
+  },
+  win: {
+    target: ['nsis', 'portable'],
+    icon: 'public/tamga.ico',
   },
   mac: {
-    target: ['dmg'],
-    icon: 'public/tamga.png',
+    target: ['dmg', 'zip'],
+    icon: 'public/tamga.ico',
   },
   nsis: {
     oneClick: false,
     allowToChangeInstallationDirectory: true,
   },
 }
-
-

@@ -1,9 +1,12 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, BrowserWindow, Menu, nativeImage } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Set application name early for Linux/Windows
+app.setName("Tamga");
 
 // The built directory structure
 //
@@ -52,27 +55,36 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 let win = null;
-const preload = path.join(__dirname, "preload.js");
+const preload = path.join(__dirname, "preload.cjs");
 const indexHtml = path.join(RENDERER_DIST, "index.html");
 
 async function createWindow() {
-  const iconPath = path.join(process.env.VITE_PUBLIC, "tamga.png");
-  console.log("Icon path:", iconPath);
-  console.log("Icon exists:", fs.existsSync(iconPath));
+  const iconPath = path.join(process.env.VITE_PUBLIC, "tamga.ico");
+  const iconImage = nativeImage.createFromPath(iconPath);
+  console.log("Setting window icon from:", iconPath);
+  console.log("Icon image size:", iconImage.getSize());
+  console.log("Icon image is empty:", iconImage.isEmpty());
 
   win = new BrowserWindow({
     title: "Tamga",
     width: 1200,
     height: 800,
-    icon: iconPath,
-    autoHideMenuBar: true, // Hide menu bar
+    icon: iconImage,
+    autoHideMenuBar: true,
     webPreferences: {
       preload,
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: false, // Allow loading from dev server
+      webSecurity: false,
     },
   });
+
+  // Explicitly set icon again for some Linux environments with a small delay
+  if (!iconImage.isEmpty()) {
+    setTimeout(() => {
+      if (win) win.setIcon(iconImage);
+    }, 500);
+  }
 
   // Enable screen capture
   win.webContents.session.setDisplayMediaRequestHandler((request, callback) => {

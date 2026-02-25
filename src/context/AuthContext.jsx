@@ -63,27 +63,36 @@ export function AuthProvider({ children }) {
 
     // Crypto Utilities
     const deriveKey = async (password, salt) => {
-        const enc = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey(
-            "raw",
-            enc.encode(password),
-            { name: "PBKDF2" },
-            false,
-            ["deriveKey"]
-        );
+        console.log("[deriveKey] Start", { passwordLen: password?.length, saltLen: salt?.byteLength });
+        try {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw",
+                enc.encode(password),
+                { name: "PBKDF2" },
+                false,
+                ["deriveKey"]
+            );
+            console.log("[deriveKey] Material imported");
 
-        return await crypto.subtle.deriveKey(
-            {
-                name: "PBKDF2",
-                salt: salt,
-                iterations: 100000,
-                hash: "SHA-256",
-            },
-            keyMaterial,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["encrypt", "decrypt"]
-        );
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256",
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+            console.log("[deriveKey] Key derivation complete");
+            return key;
+        } catch (e) {
+            console.error("[deriveKey] FATAL ERROR", e);
+            throw e;
+        }
     };
 
     const encryptData = async (data, key) => {
@@ -107,14 +116,23 @@ export function AuthProvider({ children }) {
     };
 
     const decryptData = async (encryptedJson, key) => {
+        console.log("[decryptData] Start", { inputLen: encryptedJson?.length });
         try {
-            const { iv, data } = JSON.parse(encryptedJson);
+            const parsed = JSON.parse(encryptedJson);
+            const { iv, data } = parsed;
+
+            if (!iv || !data) {
+                console.error("[decryptData] Missing iv or data in parsed object", Object.keys(parsed));
+                return null;
+            }
+
             const ivArray = new Uint8Array(iv);
             const dataArray = new Uint8Array(data);
 
             // AES-GCM tag is usually 16 bytes. If data is smaller, decryption will fail anyway.
             if (dataArray.length < 16) {
-                throw new Error("Encrypted data is too small or corrupted");
+                console.error("[decryptData] Data too short");
+                return null;
             }
 
             const decrypted = await crypto.subtle.decrypt(
@@ -124,9 +142,11 @@ export function AuthProvider({ children }) {
             );
 
             const dec = new TextDecoder();
-            return JSON.parse(dec.decode(decrypted));
+            const decodedResult = dec.decode(decrypted);
+            console.log("[decryptData] Decryption/Decode success");
+            return JSON.parse(decodedResult);
         } catch (e) {
-            console.error("Decryption failed", e);
+            console.error("[decryptData] FAILED", e);
             return null;
         }
     };
@@ -213,9 +233,12 @@ export function AuthProvider({ children }) {
     const exportData = async () => {
         if (!encryptionKey) return null;
 
+        const saltJson = localStorage.getItem("tamga-salt");
+        if (!saltJson) return null;
+
         const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs"];
         const exportObj = {
-            version: 1,
+            version: 2, // Increment version
             timestamp: Date.now(),
             data: {}
         };
@@ -227,21 +250,120 @@ export function AuthProvider({ children }) {
             }
         }
 
-        // Return as encrypted blob string
-        return await encryptData(exportObj, encryptionKey);
+        // Return as a JSON containing the encrypted data AND the salt
+        const encrypted = await encryptData(exportObj, encryptionKey);
+        return JSON.stringify({
+            encrypted,
+            salt: JSON.parse(saltJson)
+        });
     };
 
-    const importData = async (encryptedJsonString) => {
-        if (!encryptionKey) return false;
-
+    const importData = async (backupJsonString, password = null, manualSalt = null) => {
+        console.log("[Import] Starting process...");
         try {
-            const decryptedObj = await decryptData(encryptedJsonString, encryptionKey);
-            if (!decryptedObj || !decryptedObj.data) {
-                toast.error("Invalid backup file or wrong password");
+            const backup = JSON.parse(backupJsonString);
+            const isLegacy = !backup.salt && !manualSalt;
+            console.log("[Import] Backup parsed", {
+                version: backup.version,
+                hasSalt: !!backup.salt,
+                hasManualSalt: !!manualSalt,
+                hasPassword: !!password
+            });
+
+            // Special Case: "Already a User" - Fresh install restoration
+            if (!hasPassword) {
+                console.log("[Import] Fresh install restoration mode");
+
+                if (!password) {
+                    console.error("[Import] Error: Password required but missing");
+                    toast.error("Master password is required to restore your vault.");
+                    return false;
+                }
+
+                // Determine salt source
+                let saltArray = null;
+                if (backup.salt) {
+                    saltArray = new Uint8Array(backup.salt);
+                } else if (manualSalt) {
+                    console.log("[Import] Using provided manual salt");
+                    saltArray = new Uint8Array(manualSalt);
+                } else {
+                    console.error("[Import] Error: Salt missing. This is a legacy backup.");
+                    toast.error("Legacy Backup Detected", {
+                        description: "This backup is not portable. You must provide a manual salt to restore it on this device.",
+                        duration: 6000
+                    });
+                    return false;
+                }
+
+                console.log("[Import] Deriving key from old password...");
+                const derivedKey = await deriveKey(password, saltArray);
+
+                const encryptedContent = backup.encrypted ?
+                    (typeof backup.encrypted === 'string' ? backup.encrypted : JSON.stringify(backup.encrypted))
+                    : backupJsonString;
+
+                console.log("[Import] Attempting decryption...");
+                const decryptedObj = await decryptData(encryptedContent, derivedKey);
+
+                if (!decryptedObj || !decryptedObj.data) {
+                    console.error("[Import] Decryption verify failed. Likely wrong password or invalid salt.");
+                    toast.error("Restoration failed. Incorrect password, invalid salt, or corrupted backup file.");
+                    return false;
+                }
+
+                console.log("[Import] RESTORING DATA TO LOCAL STORAGE...");
+                // Restore items FIRST
+                for (const [key, value] of Object.entries(decryptedObj.data)) {
+                    const reEncrypted = await encryptData(value, derivedKey);
+                    localStorage.setItem(key, reEncrypted);
+                    console.log(`[Import] Saved ${key}`);
+                }
+
+                // Initialize auth state LAST
+                console.log("[Import] Initializing vault state...");
+                const validatorToken = "tamga-valid-token";
+                const encryptedValidator = await encryptData(validatorToken, derivedKey);
+
+                localStorage.setItem("tamga-salt", JSON.stringify(Array.from(saltArray)));
+                localStorage.setItem("tamga-validator", encryptedValidator);
+
+                setEncryptionKey(derivedKey);
+                setHasPassword(true);
+                setIsLocked(false);
+
+                console.log("[Import] RESTORATION COMPLETE");
+                toast.success("Vault restored successfully from backup");
+                return true;
+            }
+
+            // Normal Case: App is already initialized (merge mode)
+            console.log("[Import] Normal import mode (vault already exists)");
+            let decryptionKey = encryptionKey;
+
+            const effectiveSalt = backup.salt || manualSalt;
+            if (password && effectiveSalt) {
+                console.log("[Import] Using provided password/salt for cross-device decryption...");
+                const saltArray = new Uint8Array(effectiveSalt);
+                decryptionKey = await deriveKey(password, saltArray);
+            }
+
+            if (!decryptionKey) {
+                toast.error("Unlock the app or provide the backup password");
                 return false;
             }
 
-            // Restore data
+            const encryptedContent = backup.encrypted ?
+                (typeof backup.encrypted === 'string' ? backup.encrypted : JSON.stringify(backup.encrypted))
+                : backupJsonString;
+
+            const decryptedObj = await decryptData(encryptedContent, decryptionKey);
+
+            if (!decryptedObj || !decryptedObj.data) {
+                toast.error("Invalid backup file or incorrect password/salt");
+                return false;
+            }
+
             for (const [key, value] of Object.entries(decryptedObj.data)) {
                 await updateData(key, value);
             }
@@ -249,8 +371,8 @@ export function AuthProvider({ children }) {
             toast.success("Data imported successfully");
             return true;
         } catch (e) {
-            console.error("Import failed", e);
-            toast.error("Import failed. Integrity check error.");
+            console.error("[Import] GLOBAL ERROR", e);
+            toast.error("Import failed: Malformed file or internal error.");
             return false;
         }
     };

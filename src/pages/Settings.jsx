@@ -13,7 +13,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database } from "lucide-react";
+import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
@@ -25,6 +33,15 @@ const Settings = () => {
   const [currentPassword, setCurrentPassword] = useState(""); // For changing/removing
 
   const [mode, setMode] = useState("set"); // 'set', 'change'
+
+  // Import State
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importPassword, setImportPassword] = useState("");
+  const [manualSalt, setManualSalt] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isLegacyBackup, setIsLegacyBackup] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const handleSetPassword = async (e) => {
     e.preventDefault();
@@ -72,20 +89,76 @@ const Settings = () => {
     toast.success("Backup downloaded successfully");
   };
 
-  const handleImport = (e) => {
+  const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Detect legacy backup proactively
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      const content = event.target.result;
-      const success = await importData(content);
-      if (success) {
-        // Optional: reload or refresh state? Context updates should trigger re-renders elsewhere
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target.result);
+        const legacy = !json.salt;
+        setIsLegacyBackup(legacy);
+        if (legacy) setShowAdvanced(true);
+      } catch (err) {
+        setIsLegacyBackup(false);
       }
     };
     reader.readAsText(file);
+
+    setSelectedFile(file);
+    setShowImportDialog(true);
     e.target.value = null; // Reset input
+  };
+
+  const confirmImport = async () => {
+    if (!selectedFile || isImporting) return;
+
+    setIsImporting(true);
+    const toastId = toast.loading(!hasPassword ? "Restoring vault..." : "Importing data...");
+
+    try {
+      const content = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(new Error("File read failed"));
+        reader.readAsText(selectedFile);
+      });
+
+      let parsedSalt = null;
+      if (manualSalt.trim()) {
+        try {
+          // If user pastes "[1, 2, 3]", parse it. If just "1, 2, 3", also try to handle.
+          const cleaned = manualSalt.trim().startsWith('[') ? manualSalt.trim() : `[${manualSalt.trim()}]`;
+          parsedSalt = JSON.parse(cleaned);
+          if (!Array.isArray(parsedSalt)) throw new Error("Salt must be an array");
+        } catch (e) {
+          toast.error("Invalid salt format. Should be like: [12, 34, ...]");
+          setIsImporting(false);
+          toast.dismiss(toastId);
+          return;
+        }
+      }
+
+      const success = await importData(content, importPassword, parsedSalt);
+      if (success) {
+        setShowImportDialog(false);
+        setImportPassword("");
+        setManualSalt("");
+        setShowAdvanced(false);
+        setIsLegacyBackup(false);
+        setSelectedFile(null);
+        toast.dismiss(toastId);
+      } else {
+        toast.dismiss(toastId);
+      }
+    } catch (e) {
+      console.error("Import process error", e);
+      toast.error("Process failed: " + e.message, { id: toastId });
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   return (
@@ -140,34 +213,67 @@ const Settings = () => {
                 Backup your encrypted data or restore from a backup file.
                 <br />
                 <span className="text-amber-500 font-medium text-xs">
-                  Note: Backup files are encrypted with your Master Password. You can only restore them if you have the same Master Password set.
+                  Note: Backup files (.enc) are encrypted with your Master Password. You can only restore them if you have the same Master Password set.
                 </span>
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="outline" onClick={handleExport} disabled={!hasPassword} className="h-20 flex flex-col items-center justify-center gap-2">
-                  <Download className="h-6 w-6" />
-                  <span>Export Backup</span>
-                </Button>
-
-                <div className="relative">
-                  <input
-                    type="file"
-                    id="import-file"
-                    className="hidden"
-                    accept=".enc,.json"
-                    onChange={handleImport}
-                    disabled={!hasPassword}
-                  />
-                  <Button variant="outline" disabled={!hasPassword} className="h-20 w-full flex flex-col items-center justify-center gap-2" asChild>
-                    <label htmlFor="import-file" className="cursor-pointer">
-                      <Upload className="h-6 w-6" />
-                      <span>Import Backup</span>
-                    </label>
+              {!hasPassword ? (
+                <div className="p-6 border-2 border-dashed border-purple-200 dark:border-purple-900/50 rounded-xl bg-purple-50/50 dark:bg-purple-900/10 text-center space-y-4">
+                  <div className="flex justify-center">
+                    <div className="p-3 bg-white dark:bg-gray-950 rounded-full shadow-sm">
+                      <Database className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Existing User?</h3>
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                      If you have a backup file from another device, you can restore your entire vault here.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => document.getElementById('import-file').click()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 px-8"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Restore Vault from Backup
                   </Button>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button variant="outline" onClick={handleExport} disabled={!hasPassword} className="h-20 flex flex-col items-center justify-center gap-2">
+                    <Download className="h-6 w-6" />
+                    <span>Export Backup</span>
+                  </Button>
+
+                  <div className="relative">
+                    <input
+                      type="file"
+                      id="import-file-secondary"
+                      className="hidden"
+                      accept=".enc"
+                      onChange={handleImport}
+                    />
+                    <Button
+                      variant="outline"
+                      className="h-20 w-full flex flex-col items-center justify-center gap-2"
+                      onClick={() => document.getElementById('import-file-secondary').click()}
+                    >
+                      <Upload className="h-6 w-6" />
+                      <span>Import Backup</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Common hidden input for both trigger paths */}
+              <input
+                type="file"
+                id="import-file"
+                className="hidden"
+                accept=".enc"
+                onChange={handleImport}
+              />
             </CardContent>
           </Card>
         </section>
@@ -211,6 +317,16 @@ const Settings = () => {
                     <Lock className="h-4 w-4 mr-2" />
                     Set Master Password
                   </Button>
+
+                  <div className="pt-2 text-center">
+                    <label
+                      htmlFor="import-file"
+                      className="text-sm text-purple-600 hover:text-purple-700 font-medium hover:underline flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                    >
+                      <Database className="h-3.5 w-3.5" />
+                      Already a user? Restore from backup
+                    </label>
+                  </div>
                 </form>
               ) : (
                 <div className="space-y-6 max-w-md">
@@ -243,6 +359,102 @@ const Settings = () => {
             </CardContent>
           </Card>
         </section>
+
+        {/* Import/Restore Password Dialog */}
+        <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Shield className="h-6 w-6 text-purple-600" />
+                {!hasPassword ? "Recover Your Vault" : (isLegacyBackup ? "Legacy Data Rescue" : "Portable Data Merge")}
+              </DialogTitle>
+              <DialogDescription className="pt-2">
+                {!hasPassword
+                  ? "Enter the Master Password of this backup to initialize your new vault."
+                  : (isLegacyBackup
+                    ? "Rescue data from an old device. Manual salt is required."
+                    : "Merging data from another device. Enter that device's Master Password.")}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {isLegacyBackup && !hasPassword && (
+                <div className="p-4 bg-amber-500/10 border border-amber-500/50 rounded-lg space-y-2 animate-in fade-in zoom-in-95">
+                  <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-sm">
+                    <Shield className="h-4 w-4" />
+                    Legacy (Offline) Backup Detected
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    This backup is from an old version. To open it on this device, you <strong>must</strong> provide the manual "salt" from your old device.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="import-password">
+                  {!hasPassword ? "Current Backup's Password" : "Backup Password (optional)"}
+                </Label>
+                <Input
+                  id="import-password"
+                  type="password"
+                  value={importPassword}
+                  onChange={(e) => setImportPassword(e.target.value)}
+                  placeholder="Enter master password used for this backup"
+                  autoFocus
+                  onKeyDown={(e) => e.key === "Enter" && confirmImport()}
+                />
+              </div>
+
+              {!hasPassword && (
+                <div className="space-y-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`text-xs p-0 h-auto ${isLegacyBackup ? 'text-amber-600 font-bold' : 'text-muted-foreground'}`}
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                  >
+                    {showAdvanced ? "Hide Advanced Options" : "Advanced: Manual Salt (Required for legacy backups)"}
+                  </Button>
+
+                  {showAdvanced && (
+                    <div className="space-y-2 pt-2 animate-in fade-in slide-in-from-top-1">
+                      <Label htmlFor="manual-salt" className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        Manual Encryption Salt
+                      </Label>
+                      <Input
+                        id="manual-salt"
+                        value={manualSalt}
+                        onChange={(e) => setManualSalt(e.target.value)}
+                        placeholder="e.g. [12, 45, 122, ...]"
+                        className="font-mono text-xs border-amber-500/50 focus-visible:ring-amber-500"
+                      />
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        Paste the 16-byte array from your old device's <code className="bg-muted px-1 rounded">tamga-salt</code> localStorage item.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="ghost" onClick={() => setShowImportDialog(false)} disabled={isImporting}>Cancel</Button>
+              <Button
+                onClick={confirmImport}
+                disabled={isImporting || (!hasPassword && !importPassword)}
+                className="bg-purple-600 hover:bg-purple-700 text-white min-w-[120px]"
+              >
+                {isImporting ? (
+                  <span className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Processing...
+                  </span>
+                ) : (
+                  !hasPassword ? "Initialize & Restore" : "Decrypt & Merge Data"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
     </div>

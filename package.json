@@ -1,7 +1,15 @@
 {
   "name": "tamga",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Tamga: Local-first security vault.",
+  "author": "Tamga Team <contact@tamga.app>",
+  "license": "MIT",
+  "homepage": "https://github.com/osmn-byhn/tamga",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/osmn-byhn/tamga.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +18,7 @@
     "preview": "vite preview",
     "tailwind:init": "tailwindcss init -p",
     "electron:dev": "concurrently \"cross-env vite\" \"wait-on http://localhost:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 NODE_ENV=development electron .\"",
-    "electron:build": "vite build && electron-builder",
+    "electron:build": "vite build && electron-builder build --config electron-builder.config.js",
     "electron:start": "cross-env NODE_ENV=production electron ."
   },
   "main": "electron/main.js",
