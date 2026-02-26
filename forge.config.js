@@ -9,7 +9,7 @@ export default {
     makers: [
         {
             name: '@electron-forge/maker-zip',
-            platforms: ['linux', 'win32', 'darwin'],
+            platforms: ['win32', 'darwin'],
         },
         {
             name: '@electron-forge/maker-rpm',
@@ -23,6 +23,22 @@ export default {
                     license: 'MIT',
                     icon: './public/tamga.png',
                     vendor: 'Tamga Team',
+                    homepage: 'https://github.com/osmn-byhn/tamga',
+                    maintainer: 'Tamga Team <contact@tamga.app>'
+                }
+            },
+        },
+        {
+            name: '@electron-forge/maker-deb',
+            config: {
+                options: {
+                    name: 'tamga',
+                    productName: 'Tamga',
+                    genericName: 'Tamga',
+                    description: 'Secure local-first security vault.',
+                    categories: ['Utility'],
+                    license: 'MIT',
+                    icon: './public/tamga.png',
                     homepage: 'https://github.com/osmn-byhn/tamga',
                     maintainer: 'Tamga Team <contact@tamga.app>'
                 }
