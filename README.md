@@ -71,7 +71,7 @@ This starts the Vite dev server and launches Electron simultaneously. Hot-reload
 npm run make
 ```
 
-Output distributables (`.zip`, `.rpm`, etc.) will be placed in the [tamga-1.0.0-1](https://github.com/osmn-byhn/tamga/releases) directory.
+Output distributables (`.zip`, `.rpm`, .`.deb`, etc.) will be placed in the [tamga-1.0.0-1](https://github.com/osmn-byhn/tamga/releases) directory.
 
 ---
 
