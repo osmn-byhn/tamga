@@ -20,7 +20,12 @@ app.setName("Tamga");
 //
 
 const dataPath = path.join(app.getPath("userData"), "vault.dat");
-process.env.APP_ROOT = path.join(__dirname, "../");
+// APP_ROOT detection: from .vite/build/ we need ../../, from electron/ we need ../
+// We detect by checking if we're inside a .vite directory
+const isBuilt = __dirname.includes(path.sep + '.vite' + path.sep) || __dirname.endsWith(path.sep + '.vite');
+process.env.APP_ROOT = isBuilt
+  ? path.join(__dirname, "../../")
+  : path.join(__dirname, "../");
 
 function readVault() {
   if (!fs.existsSync(dataPath)) return null;
@@ -59,7 +64,8 @@ const preload = path.join(__dirname, "preload.cjs");
 const indexHtml = path.join(RENDERER_DIST, "index.html");
 
 async function createWindow() {
-  const iconPath = path.join(process.env.VITE_PUBLIC, "tamga.ico");
+  const iconFile = process.platform === 'win32' ? 'tamga.ico' : 'tamga.png';
+  const iconPath = path.join(process.env.VITE_PUBLIC, iconFile);
   const iconImage = nativeImage.createFromPath(iconPath);
   console.log("Setting window icon from:", iconPath);
   console.log("Icon image size:", iconImage.getSize());
@@ -139,24 +145,29 @@ async function createWindow() {
     console.log("Renderer console:", level, message);
   });
 
-  // Try to load from dev server first
-  const devServerUrl =
-    process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
-
-  if (process.env.NODE_ENV === "development" || VITE_DEV_SERVER_URL) {
-    try {
-      console.log("Loading from dev server:", devServerUrl);
-      await win.loadURL(devServerUrl);
-      // Open devTool if the app is not packaged
-      win.webContents.openDevTools();
-    } catch (error) {
-      console.error("Failed to load from dev server, trying file:", error);
-      win.loadFile(indexHtml);
-    }
+  // Load URL or File
+  if (typeof MAIN_WINDOW_VITE_DEV_SERVER_URL !== 'undefined') {
+    // Forge Vite Dev Server
+    console.log("Loading from Forge dev server:", MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    await win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    win.webContents.openDevTools();
+  } else if (process.env.VITE_DEV_SERVER_URL) {
+    // Custom Vite Dev Server (our electron:dev script)
+    console.log("Loading from custom dev server:", process.env.VITE_DEV_SERVER_URL);
+    await win.loadURL(process.env.VITE_DEV_SERVER_URL);
+    win.webContents.openDevTools();
   } else {
-    // Load from built files
-    console.log("Loading from file:", indexHtml);
-    win.loadFile(indexHtml);
+    // Production Mode
+    let htmlPath;
+    if (typeof MAIN_WINDOW_VITE_NAME !== 'undefined') {
+      // Packaged via Electron Forge plugin-vite
+      htmlPath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
+    } else {
+      // Packaged manually or running compiled index.html
+      htmlPath = path.join(RENDERER_DIST, "index.html");
+    }
+    console.log("Loading from file:", htmlPath);
+    win.loadFile(htmlPath);
   }
 }
 

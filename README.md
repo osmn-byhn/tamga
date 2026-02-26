@@ -10,7 +10,6 @@ This name fits the application perfectly because it allows users to **seal and p
 In short:
 > **Tamga = A digital seal.**
 > Your data is yours. Your control. 🔐
-
 ## 🎯 Project Goal
 The primary goal of Tamga is to protect the user's most sensitive digital assets (passwords, 2FA codes, environment variables) without having to trust the cloud, keeping everything on their own device with military-grade encryption.
 
@@ -41,6 +40,38 @@ Tamga features a built-in decoder for Google's proprietary export format, allowi
 - **Runtime**: Electron.
 - **Security**: Key derivation using PBKDF2 and encryption via AES-GCM using the Web Crypto API (SubtleCrypto).
 - **Storage**: Data is stored as encrypted JSON blocks in local storage (localStorage).
+
+---
+
+## 🚀 Running for Development
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or later recommended)
+- npm
+
+### Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/osmn-byhn/tamga.git
+cd tamga
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the app in development mode
+npm run dev
+```
+
+This starts the Vite dev server and launches Electron simultaneously. Hot-reloading is enabled — changes to the React frontend update instantly in the Electron window.
+
+### Build for Production
+
+```bash
+npm run make
+```
+
+Output distributables (`.zip`, `.rpm`, etc.) will be placed in the [tamga-1.0.0-1](https://github.com/osmn-byhn/tamga/releases) directory.
 
 ---
 

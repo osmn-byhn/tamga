@@ -12,7 +12,7 @@ dist
 dist-electron
 release
 out
-.vite
+# .vite (Electron Forge plugin-vite paketleme işlemi için .gitignore'da OLMAMASI gerekiyor)
 *.local
 
 # Editor directories and files

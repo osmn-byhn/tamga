@@ -1,0 +1,1 @@
+var{contextBridge:e,ipcRenderer:t}=require(`electron`);e.exposeInMainWorld(`ipcRenderer`,{on:(e,n)=>t.on(e,n),off:(e,n)=>t.off(e,n),send:(e,...n)=>t.send(e,...n),invoke:(e,...n)=>t.invoke(e,...n)});
