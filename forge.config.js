@@ -43,6 +43,12 @@ export default {
                     maintainer: 'Tamga Team <contact@tamga.app>'
                 }
             },
+        },
+        {
+            name: '@electron-forge/maker-squirrel',
+            config: {
+                name: 'tamga'
+            }
         }
     ],
     plugins: [

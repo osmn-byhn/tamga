@@ -9,6 +9,7 @@ export default {
   files: [
     'dist/**/*',
     'electron/**/*',
+    '.vite/**/*',
     'package.json',
   ],
   linux: {
@@ -20,7 +21,7 @@ export default {
     synopsis: 'Secure local-first vault.',
   },
   win: {
-    target: ['nsis', 'portable'],
+    target: ['nsis'],
     icon: 'public/tamga.ico',
   },
   mac: {
@@ -29,6 +30,12 @@ export default {
   },
   nsis: {
     oneClick: false,
+    perMachine: false,
+    allowElevation: true,
     allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'Tamga',
+    artifactName: '${productName}-Setup-${version}.${ext}',
   },
 }
