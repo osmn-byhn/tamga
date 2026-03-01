@@ -41,10 +41,11 @@ async function createWindow() {
 		console.error("Failed to load:", u, d, f);
 	}), win.webContents.on("console-message", (e, u, d) => {
 		console.log("Renderer console:", u, d);
-	}), process.env.VITE_DEV_SERVER_URL) console.log("Loading from custom dev server:", process.env.VITE_DEV_SERVER_URL), await win.loadURL(process.env.VITE_DEV_SERVER_URL), win.webContents.openDevTools();
+	}), typeof MAIN_WINDOW_VITE_DEV_SERVER_URL < "u") console.log("Loading from Forge dev server:", MAIN_WINDOW_VITE_DEV_SERVER_URL), await win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL), win.webContents.openDevTools();
+	else if (process.env.VITE_DEV_SERVER_URL) console.log("Loading from custom dev server:", process.env.VITE_DEV_SERVER_URL), await win.loadURL(process.env.VITE_DEV_SERVER_URL), win.webContents.openDevTools();
 	else {
 		let e;
-		e = path.join(__dirname, "../renderer/main_window/index.html"), console.log("Loading from file:", e), win.loadFile(e);
+		e = typeof MAIN_WINDOW_VITE_NAME < "u" ? path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`) : path.join(RENDERER_DIST, "index.html"), console.log("Loading from file:", e), win.loadFile(e);
 	}
 }
 app.whenReady().then(createWindow), app.on("window-all-closed", () => {
