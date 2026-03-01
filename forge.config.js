@@ -12,6 +12,13 @@ export default {
             platforms: ['win32', 'darwin'],
         },
         {
+            name: '@electron-forge/maker-dmg',
+            config: {
+                icon: './public/tamga.icns',
+                format: 'ULFO'
+            }
+        },
+        {
             name: '@electron-forge/maker-rpm',
             config: {
                 options: {
