@@ -16,8 +16,8 @@ export default {
     target: ['rpm', 'AppImage'],
     category: 'Security',
     icon: 'public/tamga.png',
-    maintainer: 'Tamga Team <contact@tamga.app>',
-    vendor: 'Tamga Team',
+    maintainer: 'Osman Beyhan <developer@osmanbeyhan.com>',
+    vendor: 'Osman Beyhan',
     synopsis: 'Secure local-first vault.',
   },
   win: {

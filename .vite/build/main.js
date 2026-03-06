@@ -1,4 +1,5 @@
-import { BrowserWindow, Menu, app, nativeImage } from "electron";
+import { BrowserWindow, Menu, app, ipcMain, nativeImage } from "electron";
+import { updateIfNeeded } from "@osmn-byhn/changelog-github-updater";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import "node:fs";
@@ -11,12 +12,12 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 var win = null, preload = path.join(__dirname, "preload.cjs");
 path.join(RENDERER_DIST, "index.html");
 async function createWindow() {
-	let u = process.platform === "win32" ? "tamga.ico" : "tamga.png", d = path.join(process.env.VITE_PUBLIC, u), p = nativeImage.createFromPath(d);
-	if (console.log("Setting window icon from:", d), console.log("Icon image size:", p.getSize()), console.log("Icon image is empty:", p.isEmpty()), win = new BrowserWindow({
+	let p = process.platform === "win32" ? "tamga.ico" : "tamga.png", m = path.join(process.env.VITE_PUBLIC, p), h = nativeImage.createFromPath(m);
+	if (console.log("Setting window icon from:", m), console.log("Icon image size:", h.getSize()), console.log("Icon image is empty:", h.isEmpty()), win = new BrowserWindow({
 		title: "Tamga",
 		width: 1200,
 		height: 800,
-		icon: p,
+		icon: h,
 		autoHideMenuBar: !0,
 		webPreferences: {
 			preload,
@@ -24,23 +25,23 @@ async function createWindow() {
 			contextIsolation: !0,
 			webSecurity: !1
 		}
-	}), p.isEmpty() || setTimeout(() => {
-		win && win.setIcon(p);
-	}, 500), win.webContents.session.setDisplayMediaRequestHandler((e, u) => {
+	}), h.isEmpty() || setTimeout(() => {
+		win && win.setIcon(h);
+	}, 500), win.webContents.session.setDisplayMediaRequestHandler((e, p) => {
 		import("electron").then(({ desktopCapturer: e }) => {
 			e.getSources({ types: ["screen"] }).then((e) => {
-				e.length > 0 ? u({
+				e.length > 0 ? p({
 					video: e[0],
 					audio: "loopback"
-				}) : u(null);
+				}) : p(null);
 			});
 		});
 	}), win.webContents.on("did-finish-load", () => {
 		win?.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-	}), win.webContents.on("did-fail-load", (e, u, d, f) => {
-		console.error("Failed to load:", u, d, f);
-	}), win.webContents.on("console-message", (e, u, d) => {
-		console.log("Renderer console:", u, d);
+	}), win.webContents.on("did-fail-load", (e, p, m, h) => {
+		console.error("Failed to load:", p, m, h);
+	}), win.webContents.on("console-message", (e, p, m) => {
+		console.log("Renderer console:", p, m);
 	}), typeof MAIN_WINDOW_VITE_DEV_SERVER_URL < "u") console.log("Loading from Forge dev server:", MAIN_WINDOW_VITE_DEV_SERVER_URL), await win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL), win.webContents.openDevTools();
 	else if (process.env.VITE_DEV_SERVER_URL) console.log("Loading from custom dev server:", process.env.VITE_DEV_SERVER_URL), await win.loadURL(process.env.VITE_DEV_SERVER_URL), win.webContents.openDevTools();
 	else {
@@ -48,12 +49,30 @@ async function createWindow() {
 		e = typeof MAIN_WINDOW_VITE_NAME < "u" ? path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`) : path.join(RENDERER_DIST, "index.html"), console.log("Loading from file:", e), win.loadFile(e);
 	}
 }
-app.whenReady().then(createWindow), app.on("window-all-closed", () => {
+app.whenReady().then(() => {
+	createWindow(), ipcMain.handle("check-updates", async () => {
+		try {
+			return {
+				success: !0,
+				...await updateIfNeeded({
+					owner: "osmn-byhn",
+					repo: "tamga",
+					autoInstall: !0
+				})
+			};
+		} catch (e) {
+			return console.error("Update error:", e), {
+				success: !1,
+				error: e.message
+			};
+		}
+	});
+}), app.on("window-all-closed", () => {
 	win = null, process.platform !== "darwin" && app.quit();
 }), app.on("second-instance", () => {
 	win && (win.isMinimized() && win.restore(), win.focus());
 }), app.on("activate", () => {
-	let u = BrowserWindow.getAllWindows();
-	u.length ? u[0].focus() : createWindow();
+	let p = BrowserWindow.getAllWindows();
+	p.length ? p[0].focus() : createWindow();
 });
 export { MAIN_DIST, RENDERER_DIST, VITE_DEV_SERVER_URL };

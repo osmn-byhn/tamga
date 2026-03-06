@@ -1,4 +1,5 @@
-import { app, BrowserWindow, Menu, nativeImage } from "electron";
+import { app, BrowserWindow, Menu, nativeImage, ipcMain } from "electron";
+import { updateIfNeeded } from "@osmn-byhn/changelog-github-updater";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
@@ -171,7 +172,23 @@ async function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+
+  ipcMain.handle('check-updates', async () => {
+    try {
+      const result = await updateIfNeeded({
+        owner: 'osmn-byhn',
+        repo: 'tamga',
+        autoInstall: true
+      });
+      return { success: true, ...result };
+    } catch (error) {
+      console.error("Update error:", error);
+      return { success: false, error: error.message };
+    }
+  });
+});
 
 app.on("window-all-closed", () => {
   win = null;
