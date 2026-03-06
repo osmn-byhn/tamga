@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw } from "lucide-react";
+import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw, Info } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import pkg from "../../package.json";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
@@ -42,6 +43,8 @@ const Settings = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLegacyBackup, setIsLegacyBackup] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [showAboutDialog, setShowAboutDialog] = useState(false);
 
   const handleSetPassword = async (e) => {
     e.preventDefault();
@@ -161,6 +164,33 @@ const Settings = () => {
     }
   };
 
+  const handleCheckUpdates = async () => {
+    setIsCheckingUpdates(true);
+    const toastId = toast.loading("Checking for updates...");
+
+    try {
+      if (!window.ipcRenderer) {
+        toast.error("Updates are only supported in the desktop app.", { id: toastId });
+        setIsCheckingUpdates(false);
+        return;
+      }
+
+      const result = await window.ipcRenderer.invoke('check-updates');
+
+      if (!result.success) {
+        toast.error(`Update check failed: ${result.error}`, { id: toastId });
+      } else if (result.updated) {
+        toast.success(`Update found! Downloading version ${result.to}...`, { id: toastId });
+      } else {
+        toast.success("You are on the latest version.", { id: toastId });
+      }
+    } catch (e) {
+      toast.error("Failed to check for updates: " + e.message, { id: toastId });
+    } finally {
+      setIsCheckingUpdates(false);
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 transition-colors duration-300">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -200,6 +230,44 @@ const Settings = () => {
         </section>
 
 
+
+        {/* System / Updates Section */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <RefreshCw className="h-5 w-5" /> Updates & About
+          </h2>
+          <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+            <CardHeader>
+              <CardTitle>Application Updates</CardTitle>
+              <CardDescription>
+                Check for new versions and view application details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-4">
+              <Button
+                onClick={handleCheckUpdates}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+                disabled={isCheckingUpdates}
+              >
+                {isCheckingUpdates ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Checking...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Check for Updates
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setShowAboutDialog(true)}>
+                <Info className="h-4 w-4 mr-2" />
+                About App
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
 
         {/* Data Management Section */}
         <section className="space-y-4">
@@ -451,6 +519,51 @@ const Settings = () => {
                 ) : (
                   !hasPassword ? "Initialize & Restore" : "Decrypt & Merge Data"
                 )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* About App Dialog */}
+        <Dialog open={showAboutDialog} onOpenChange={setShowAboutDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <Info className="h-6 w-6 text-purple-600" />
+                About Tamga
+              </DialogTitle>
+              <DialogDescription>
+                {pkg.description}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex flex-col items-center justify-center space-y-2 text-center border border-gray-100 dark:border-gray-800 p-6 rounded-lg bg-gray-50/50 dark:bg-gray-900/50">
+                <img src="/tamga.png" alt="Tamga Logo" className="w-16 h-16 object-contain mb-2 drop-shadow-md" />
+                <h3 className="text-xl font-bold tracking-tight">Tamga</h3>
+                <div className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
+                  Version {pkg.version}
+                </div>
+              </div>
+              <div className="text-sm space-y-3 pt-2">
+                <div className="flex justify-between items-center border-b border-border pb-2">
+                  <span className="text-muted-foreground">Author</span>
+                  <span className="font-medium">{pkg.author}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-border pb-2">
+                  <span className="text-muted-foreground">License</span>
+                  <span className="font-medium">{pkg.license}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-border pb-2">
+                  <span className="text-muted-foreground">Website</span>
+                  <a href={pkg.homepage} target="_blank" rel="noreferrer" className="text-purple-600 hover:text-purple-700 font-medium hover:underline">
+                    GitHub Repository
+                  </a>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setShowAboutDialog(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100">
+                Close
               </Button>
             </DialogFooter>
           </DialogContent>
