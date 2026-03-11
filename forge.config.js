@@ -30,8 +30,8 @@ export default {
                     license: 'MIT',
                     icon: './public/tamga.png',
                     vendor: 'Tamga Team',
-                    homepage: 'https://github.com/osmn-byhn/tamga',
-                    maintainer: 'Tamga Team <contact@tamga.app>'
+                    homepage: 'https://tamga.osmanbeyhan.com',
+                    maintainer: 'Osman Beyhan <developer@osmanbeyhan.com>'
                 }
             },
         },
@@ -46,8 +46,8 @@ export default {
                     categories: ['Utility'],
                     license: 'MIT',
                     icon: './public/tamga.png',
-                    homepage: 'https://github.com/osmn-byhn/tamga',
-                    maintainer: 'Tamga Team <contact@tamga.app>'
+                    homepage: 'https://tamga.osmanbeyhan.com',
+                    maintainer: 'Osman Beyhan <developer@osmanbeyhan.com>'
                 }
             },
         },

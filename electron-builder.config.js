@@ -13,7 +13,7 @@ export default {
     'package.json',
   ],
   linux: {
-    target: ['rpm', 'AppImage'],
+    target: ['rpm', 'deb', 'AppImage'],
     category: 'Security',
     icon: 'public/tamga.png',
     maintainer: 'Osman Beyhan <developer@osmanbeyhan.com>',
