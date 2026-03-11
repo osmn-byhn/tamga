@@ -556,7 +556,7 @@ const Settings = () => {
                 <div className="flex justify-between items-center border-b border-border pb-2">
                   <span className="text-muted-foreground">Website</span>
                   <a href={pkg.homepage} target="_blank" rel="noreferrer" className="text-purple-600 hover:text-purple-700 font-medium hover:underline">
-                    GitHub Repository
+                    Tamga Website
                   </a>
                 </div>
               </div>

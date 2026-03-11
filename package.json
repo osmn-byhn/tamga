@@ -3,9 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "description": "Tamga: Local-first security vault.",
-  "author": "Tamga Team <contact@tamga.app>",
+  "author": "osmn-byhn <developer@osmanbeyhan.com>",
   "license": "MIT",
-  "homepage": "https://github.com/osmn-byhn/tamga",
+  "homepage": "https://tamga.osmanbeyhan.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/osmn-byhn/tamga.git"
@@ -22,7 +22,7 @@
     "electron:start": "cross-env NODE_ENV=production electron .",
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
+    "make": "npm run electron:build -- -wl",
     "postinstall": "electron-builder install-app-deps"
   },
   "main": ".vite/build/main.js",
