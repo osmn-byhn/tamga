@@ -1,7 +1,7 @@
 {
   "name": "tamga",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Tamga: Local-first security vault.",
   "author": "osmn-byhn <developer@osmanbeyhan.com>",
   "license": "MIT",
