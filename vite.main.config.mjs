@@ -20,8 +20,11 @@ export default defineConfig({
             external: [
                 'electron',
                 ...nodeBuiltins,
-                ...Object.keys(require('./package.json').dependencies || {}),
+                ...Object.keys(require('./package.json').dependencies || {}).filter(dep => !dep.startsWith('@osmn-byhn/')),
             ],
+            output: {
+                banner: 'import { createRequire as __cjsRequire } from "module";\nconst require = __cjsRequire(import.meta.url);',
+            },
         },
     },
 });
