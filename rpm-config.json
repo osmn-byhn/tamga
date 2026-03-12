@@ -1,0 +1,14 @@
+{
+    "name": "tamga",
+    "productName": "Tamga",
+    "genericName": "Security Vault",
+    "description": "Tamga: Local-first security vault.",
+    "productDescription": "Secure local-first vault.",
+    "categories": [
+        "Security",
+        "Utility"
+    ],
+    "icon": "public/tamga.png",
+    "mimeType": [],
+    "homepage": "https://tamga.osmanbeyhan.com"
+}

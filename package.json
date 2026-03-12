@@ -23,6 +23,7 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "npm run electron:build -- -wl",
+    "electron:rpm": "echo '1.0.1' > release/1.0.1/linux-unpacked/version && cp LICENSE release/1.0.1/linux-unpacked/LICENSE && electron-installer-redhat --src release/1.0.1/linux-unpacked --dest release/1.0.1 --arch x86_64 --config rpm-config.json",
     "postinstall": "electron-builder install-app-deps"
   },
   "main": ".vite/build/main.js",
