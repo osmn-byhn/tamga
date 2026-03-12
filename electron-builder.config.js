@@ -7,6 +7,8 @@ export default {
     buildResources: "public"
   },
 
+
+
   files: [
     "dist/**/*",
     "electron/**/*",
