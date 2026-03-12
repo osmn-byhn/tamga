@@ -15,7 +15,7 @@ export default {
   ],
 
   linux: {
-    target: ["AppImage", "deb", "rpm"],
+    target: ["AppImage", "deb"],
     category: "Security",
     executableName: "tamga",
     icon: "public/tamga.png",
@@ -24,9 +24,6 @@ export default {
     synopsis: "Secure local-first vault."
   },
 
-  rpm: {
-    compression: "xz"
-  },
 
   win: {
     target: ["nsis", "zip"],
