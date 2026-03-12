@@ -15,7 +15,7 @@ export default {
   ],
 
   linux: {
-    target: ["AppImage", "deb", "rpm", "snap", "flatpak", "pacman", "tar.gz"],
+    target: ["AppImage", "deb", "rpm"],
     category: "Security",
     executableName: "tamga",
     icon: "public/tamga.png",
@@ -29,7 +29,7 @@ export default {
   },
 
   win: {
-    target: ["nsis", "msi", "portable", "zip"],
+    target: ["nsis", "zip"],
     icon: "public/tamga.ico"
   },
 
