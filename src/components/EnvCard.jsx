@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, Terminal, Trash2, FileJson } from "lucide-react";
+import { Copy, Eye, EyeOff, Terminal, Trash2, FileJson, Pencil } from "lucide-react";
+import EditEnvDialog from "./EditEnvDialog";
+import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -11,8 +13,10 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 
-const EnvCard = ({ envItem, onDelete }) => {
+const EnvCard = ({ envItem, onDelete, onUpdate }) => {
+    const { hideSensitiveData } = useSettings();
     const [showFull, setShowFull] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
 
     const copyToClipboard = () => {
         navigator.clipboard.writeText(envItem.content);
@@ -41,10 +45,15 @@ const EnvCard = ({ envItem, onDelete }) => {
                             </div>
 
                             <div
-                                className="mt-3 p-3 bg-muted rounded-md font-mono text-xs text-muted-foreground overflow-hidden cursor-pointer hover:bg-muted/80 transition-colors border border-border"
+                                className="mt-3 p-3 bg-muted rounded-md font-mono text-xs text-muted-foreground overflow-hidden cursor-pointer hover:bg-muted/80 transition-all duration-300 border border-border"
                                 onClick={() => setShowFull(true)}
                             >
-                                <pre className="whitespace-pre-wrap break-all">{previewContent}</pre>
+                                <pre className={cn(
+                                    "whitespace-pre-wrap break-all transition-all duration-300",
+                                    (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
+                                )}>
+                                    {previewContent}
+                                </pre>
                             </div>
 
                             <p className="text-xs text-muted-foreground mt-2">
@@ -57,11 +66,21 @@ const EnvCard = ({ envItem, onDelete }) => {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                onClick={() => setShowFull(true)}
-                                title="View Full Content"
+                                onClick={() => setIsVisible(!isVisible)}
+                                title={isVisible ? "Hide" : "Show"}
                             >
-                                <Eye className="h-4 w-4" />
+                                {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </Button>
+                            <EditEnvDialog envItem={envItem} onUpdate={onUpdate}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    title="Edit"
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                            </EditEnvDialog>
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -96,7 +115,12 @@ const EnvCard = ({ envItem, onDelete }) => {
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto bg-muted p-4 rounded-md border border-border mt-2">
-                        <pre className="font-mono text-sm text-foreground whitespace-pre-wrap">{content}</pre>
+                        <pre className={cn(
+                            "font-mono text-sm text-foreground whitespace-pre-wrap transition-all duration-300",
+                            (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
+                        )}>
+                            {content}
+                        </pre>
                     </div>
                     <div className="flex justify-end pt-2">
                         <Button onClick={copyToClipboard} className="bg-green-600 hover:bg-green-700 text-white gap-2">

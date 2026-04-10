@@ -12,12 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 
-const AddPasskeyDialog = ({ onAdd, children }) => {
+const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
-    const [label, setLabel] = useState("");
-    const [secret, setSecret] = useState("");
+    const [label, setLabel] = useState(passkey.label || "");
+    const [secret, setSecret] = useState(passkey.secret || "");
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -26,15 +26,13 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
             return;
         }
 
-        onAdd({
+        onUpdate(passkey.id, {
             label: label.trim(),
             secret: secret.trim(),
         });
 
         setOpen(false);
-        setLabel("");
-        setSecret("");
-        toast.success("Passkey added successfully");
+        toast.success("Passkey updated successfully");
     };
 
     const handleFileUpload = (e) => {
@@ -56,16 +54,16 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Add New Passkey</DialogTitle>
+                    <DialogTitle>Edit Passkey</DialogTitle>
                     <DialogDescription>
-                        Store your recovery codes or backup keys securely.
+                        Update your recovery codes or backup keys securely.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="pk-label">Label</Label>
+                        <Label htmlFor="edit-pk-label">Label</Label>
                         <Input
-                            id="pk-label"
+                            id="edit-pk-label"
                             placeholder="e.g. GitHub Recovery Codes"
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
@@ -73,31 +71,31 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label htmlFor="pk-secret">Secret / Code</Label>
+                            <Label htmlFor="edit-pk-secret">Secret / Code</Label>
                             <div className="relative">
                                 <input
                                     type="file"
-                                    id="upload-pk"
+                                    id="edit-upload-pk"
                                     className="hidden"
                                     accept=".txt, .text, *"
                                     onChange={handleFileUpload}
                                 />
-                                <Label htmlFor="upload-pk" className="cursor-pointer text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1">
+                                <Label htmlFor="edit-upload-pk" className="cursor-pointer text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1">
                                     <Upload className="h-3 w-3" />
                                     Upload File
                                 </Label>
                             </div>
                         </div>
                         <Textarea
-                            id="pk-secret"
+                            id="edit-pk-secret"
                             placeholder="Paste your codes here..."
                             value={secret}
                             onChange={(e) => setSecret(e.target.value)}
                             className="min-h-[100px] font-mono text-sm leading-relaxed"
                         />
                     </div>
-                    <Button type="submit" className="w-full">
-                        Save Passkey
+                    <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
+                        Update Passkey
                     </Button>
                 </form>
             </DialogContent>
@@ -105,4 +103,4 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
     );
 };
 
-export default AddPasskeyDialog;
+export default EditPasskeyDialog;

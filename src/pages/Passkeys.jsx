@@ -48,6 +48,14 @@ const Passkeys = () => {
     toast.success("Passkey removed");
   };
 
+  const handleUpdatePasskey = async (id, updatedData) => {
+    const updated = passkeys.map(pk =>
+      pk.id === id ? { ...pk, ...updatedData } : pk
+    );
+    await savePasskeys(updated);
+    toast.success("Passkey updated");
+  };
+
   return (
     <div className="min-h-screen p-6 transition-colors duration-300">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -83,7 +91,7 @@ const Passkeys = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {passkeys.map((item) => (
-              <PasskeyCard key={item.id} passkey={item} onDelete={handleDeletePasskey} />
+              <PasskeyCard key={item.id} passkey={item} onDelete={handleDeletePasskey} onUpdate={handleUpdatePasskey} />
             ))}
           </div>
         )}
