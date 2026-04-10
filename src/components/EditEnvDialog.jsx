@@ -12,29 +12,27 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 
-const AddPasskeyDialog = ({ onAdd, children }) => {
+const EditEnvDialog = ({ envItem, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
-    const [label, setLabel] = useState("");
-    const [secret, setSecret] = useState("");
+    const [projectName, setProjectName] = useState(envItem.projectName?.projectName || envItem.projectName || "");
+    const [content, setContent] = useState(envItem.content || "");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!label.trim() || !secret.trim()) {
+        if (!projectName.trim() || !content.trim()) {
             toast.error("Please fill in both fields");
             return;
         }
 
-        onAdd({
-            label: label.trim(),
-            secret: secret.trim(),
+        onUpdate(envItem.id, {
+            projectName: projectName.trim(),
+            content: content.trim(),
         });
 
         setOpen(false);
-        setLabel("");
-        setSecret("");
-        toast.success("Passkey added successfully");
+        toast.success("Env file updated successfully");
     };
 
     const handleFileUpload = (e) => {
@@ -43,7 +41,7 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            setSecret(event.target.result);
+            setContent(event.target.result);
             toast.success("File content loaded");
         };
         reader.readAsText(file);
@@ -54,50 +52,53 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Add New Passkey</DialogTitle>
+                    <DialogTitle>Edit .env File</DialogTitle>
                     <DialogDescription>
-                        Store your recovery codes or backup keys securely.
+                        Update your project configuration safely.
                     </DialogDescription>
                 </DialogHeader>
+
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="pk-label">Label</Label>
+                        <Label htmlFor="edit-project-name">Project Name</Label>
                         <Input
-                            id="pk-label"
-                            placeholder="e.g. GitHub Recovery Codes"
-                            value={label}
-                            onChange={(e) => setLabel(e.target.value)}
+                            id="edit-project-name"
+                            placeholder="My Awesome Project"
+                            value={projectName}
+                            onChange={(e) => setProjectName(e.target.value)}
                         />
                     </div>
+
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label htmlFor="pk-secret">Secret / Code</Label>
+                            <Label htmlFor="edit-env-content">Content</Label>
                             <div className="relative">
                                 <input
                                     type="file"
-                                    id="upload-pk"
+                                    id="edit-upload-env"
                                     className="hidden"
-                                    accept=".txt, .text, *"
+                                    accept=".env*, text/*"
                                     onChange={handleFileUpload}
                                 />
-                                <Label htmlFor="upload-pk" className="cursor-pointer text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1">
+                                <Label htmlFor="edit-upload-env" className="cursor-pointer text-xs text-green-500 hover:text-green-600 flex items-center gap-1">
                                     <Upload className="h-3 w-3" />
                                     Upload File
                                 </Label>
                             </div>
                         </div>
                         <Textarea
-                            id="pk-secret"
-                            placeholder="Paste your codes here..."
-                            value={secret}
-                            onChange={(e) => setSecret(e.target.value)}
-                            className="min-h-[100px] font-mono text-sm leading-relaxed"
+                            id="edit-env-content"
+                            placeholder="DB_HOST=localhost..."
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            className="min-h-[200px] font-mono text-sm"
                         />
                     </div>
-                    <Button type="submit" className="w-full">
-                        Save Passkey
+
+                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                        Update Environment Variables
                     </Button>
                 </form>
             </DialogContent>
@@ -105,4 +106,4 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
     );
 };
 
-export default AddPasskeyDialog;
+export default EditEnvDialog;

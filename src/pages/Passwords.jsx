@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { Copy, RefreshCw, Check, Save, Trash2, Globe, User, Pencil, X } from "lucide-react";
+import { Copy, RefreshCw, Check, Save, Trash2, Globe, User, Pencil, X, Eye, EyeOff } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,7 @@ import { toast } from "sonner";
 
 export default function Passwords() {
   const { getData, updateData } = useAuth();
+  const { hideSensitiveData } = useSettings();
   const [passwords, setPasswords] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +35,20 @@ export default function Passwords() {
   const [editPlatform, setEditPlatform] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editValue, setEditValue] = useState("");
+
+  // Visibility state
+  const [visibleIds, setVisibleIds] = useState(new Set());
+  const [showMainPassword, setShowMainPassword] = useState(false);
+
+  const toggleVisibility = (id) => {
+    const newVisibleIds = new Set(visibleIds);
+    if (newVisibleIds.has(id)) {
+      newVisibleIds.delete(id);
+    } else {
+      newVisibleIds.add(id);
+    }
+    setVisibleIds(newVisibleIds);
+  };
 
   useEffect(() => {
     const loadPasswords = async () => {
@@ -172,9 +189,21 @@ export default function Passwords() {
                       setPassword(e.target.value);
                       setCopied(false);
                     }}
-                    className="bg-muted h-20 rounded-lg font-mono text-2xl text-center break-all pr-24 border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                    type={(!showMainPassword && hideSensitiveData) ? "password" : "text"}
+                    className={cn(
+                      "bg-muted h-20 rounded-lg font-mono text-2xl text-center break-all pr-32 border-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300",
+                      (!showMainPassword && hideSensitiveData) ? "blur-md" : "blur-0"
+                    )}
                   />
-                  <div className="absolute top-4 right-4 flex items-center gap-3">
+                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      className="text-muted-foreground hover:text-foreground h-12 w-12"
+                      onClick={() => setShowMainPassword(!showMainPassword)}
+                      title={showMainPassword ? "Hide" : "Show"}
+                    >
+                      {showMainPassword ? <EyeOff size={24} /> : <Eye size={24} />}
+                    </Button>
                     <Button
                       variant="ghost"
                       className="text-muted-foreground hover:text-foreground h-12 w-12"
@@ -355,7 +384,12 @@ export default function Passwords() {
                               </span>
                             )}
                           </div>
-                          <div className="font-mono break-all text-lg">{item.value}</div>
+                          <div className={cn(
+                            "font-mono break-all text-lg transition-all duration-300",
+                            (hideSensitiveData && !visibleIds.has(item.id)) ? "blur-md select-none" : "blur-0"
+                          )}>
+                            {item.value}
+                          </div>
                         </div>
                       )}
 
@@ -381,6 +415,15 @@ export default function Passwords() {
                           </>
                         ) : (
                           <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-muted-foreground hover:text-foreground"
+                              onClick={() => toggleVisibility(item.id)}
+                              title={visibleIds.has(item.id) ? "Hide" : "Show"}
+                            >
+                              {visibleIds.has(item.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"

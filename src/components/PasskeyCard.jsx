@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Trash2, KeyRound } from "lucide-react";
+import { Copy, Eye, EyeOff, Trash2, KeyRound, Pencil } from "lucide-react";
+import EditPasskeyDialog from "./EditPasskeyDialog";
+import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const PasskeyCard = ({ passkey, onDelete }) => {
+const PasskeyCard = ({ passkey, onDelete, onUpdate }) => {
+    const { hideSensitiveData } = useSettings();
     const [isVisible, setIsVisible] = useState(false);
 
     const copyToClipboard = () => {
@@ -28,10 +31,10 @@ const PasskeyCard = ({ passkey, onDelete }) => {
                         </div>
 
                         <div className="relative mt-3 p-3 bg-muted rounded-md font-mono text-sm break-all group-hover:bg-muted/80 transition-colors">
-                            <div className={cn("transition-all duration-300", isVisible ? "blur-0" : "blur-[6px] select-none text-muted-foreground")}>
+                            <div className={cn("transition-all duration-300", (hideSensitiveData && !isVisible) ? "blur-[6px] select-none text-muted-foreground" : "blur-0")}>
                                 {passkey.secret}
                             </div>
-                            {!isVisible && (
+                            {(hideSensitiveData && !isVisible) && (
                                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs font-sans pointer-events-none">
                                     Tap eye to reveal
                                 </div>
@@ -43,6 +46,16 @@ const PasskeyCard = ({ passkey, onDelete }) => {
                     </div>
 
                     <div className="flex flex-col gap-1">
+                        <EditPasskeyDialog passkey={passkey} onUpdate={onUpdate}>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                title="Edit"
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        </EditPasskeyDialog>
                         <Button
                             variant="ghost"
                             size="icon"

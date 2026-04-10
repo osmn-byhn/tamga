@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Share2 } from "lucide-react";
+import ExportOtpDialog from "./ExportOtpDialog";
+import { useSettings } from "@/context/SettingsContext";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import * as OTPAuth from "otpauth";
 
 const OtpCard = ({ otpUri, onDelete }) => {
+    const { hideSensitiveData } = useSettings();
     const [totp, setTotp] = useState(null);
     const [code, setCode] = useState("");
     const [period, setPeriod] = useState(30);
     const [timeLeft, setTimeLeft] = useState(30);
+    const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
         try {
@@ -62,7 +67,10 @@ const OtpCard = ({ otpUri, onDelete }) => {
                         {totp.label.includes(":") ? totp.label.split(":")[1].trim() : totp.label}
                     </h3>
                     <div
-                        className="text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-colors mt-1"
+                        className={cn(
+                            "text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-all duration-300 mt-1",
+                            (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
+                        )}
                         onClick={copyToClipboard}
                     >
                         {code.slice(0, 3)} {code.slice(3)}
@@ -92,9 +100,23 @@ const OtpCard = ({ otpUri, onDelete }) => {
                     </div>
 
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            onClick={() => setIsVisible(!isVisible)}
+                            title={isVisible ? "Hide" : "Show"}
+                        >
+                            {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={copyToClipboard}>
                             <Copy className="h-4 w-4" />
                         </Button>
+                        <ExportOtpDialog otpUri={otpUri}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="Export Account">
+                                <Share2 className="h-4 w-4" />
+                            </Button>
+                        </ExportOtpDialog>
                         {onDelete && (
                             <Button
                                 variant="ghost"
