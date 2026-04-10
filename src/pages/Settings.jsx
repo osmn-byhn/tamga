@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw, Info } from "lucide-react";
+import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw, Info, Eye, EyeOff } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ import pkg from "../../package.json";
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { hasPassword, setMasterPassword, removeMasterPassword, unlock, exportData, importData } = useAuth();
+  const { hideSensitiveData, setHideSensitiveData } = useSettings();
 
   // Password Management State
   const [newPassword, setNewPassword] = useState("");
@@ -225,6 +227,40 @@ const Settings = () => {
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Privacy Section */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Shield className="h-5 w-5" /> Privacy & Visibility
+          </h2>
+          <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+            <CardHeader>
+              <CardTitle>Privacy Mode</CardTitle>
+              <CardDescription>
+                When enabled, sensitive data like passwords and codes will be blurred by default.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant={hideSensitiveData ? "default" : "outline"}
+                onClick={() => setHideSensitiveData(!hideSensitiveData)}
+                className={`flex items-center gap-3 h-12 px-6 transition-all duration-300 ${hideSensitiveData ? "bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20" : ""}`}
+              >
+                {hideSensitiveData ? (
+                  <>
+                    <EyeOff className="h-5 w-5" />
+                    <span>Privacy Mode: ON (Data Hidden)</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-5 w-5" />
+                    <span>Privacy Mode: OFF (Data Visible)</span>
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
         </section>

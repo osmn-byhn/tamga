@@ -9,23 +9,27 @@ import Passkeys from "./pages/Passkeys";
 import Passwords from "./pages/Passwords";
 import Settings from "./pages/Settings";
 
+import { SettingsProvider } from "./context/SettingsContext";
+
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <AuthProvider>
-        <LockScreen />
-        <HashRouter>
-          <Routes>
-            <Route path="/" element={<RootLayout />}>
-              <Route index element={<Passwords />} />
-              <Route path="env-files" element={<Envs />} />
-              <Route path="otps" element={<OtpCodes />} />
-              <Route path="backup-codes" element={<Passkeys />} />
-              <Route path="settings" element={<Settings />} />
-            </Route>
-          </Routes>
-        </HashRouter>
-      </AuthProvider>
+      <SettingsProvider>
+        <AuthProvider>
+          <LockScreen />
+          <HashRouter>
+            <Routes>
+              <Route path="/" element={<RootLayout />}>
+                <Route index element={<Passwords />} />
+                <Route path="env-files" element={<Envs />} />
+                <Route path="otps" element={<OtpCodes />} />
+                <Route path="backup-codes" element={<Passkeys />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+            </Routes>
+          </HashRouter>
+        </AuthProvider>
+      </SettingsProvider>
     </ThemeProvider>
   );
 }
