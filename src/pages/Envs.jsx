@@ -47,6 +47,14 @@ const Envs = () => {
     toast.success("Env file removed");
   };
 
+  const handleUpdateEnv = async (id, updatedData) => {
+    const updated = envItems.map(item =>
+      item.id === id ? { ...item, ...updatedData } : item
+    );
+    await saveEnvs(updated);
+    toast.success("Env file updated");
+  };
+
   return (
     <div className="min-h-screen p-6 transition-colors duration-300">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -82,7 +90,7 @@ const Envs = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {envItems.map((item) => (
-              <EnvCard key={item.id} envItem={item} onDelete={handleDeleteEnv} />
+              <EnvCard key={item.id} envItem={item} onDelete={handleDeleteEnv} onUpdate={handleUpdateEnv} />
             ))}
           </div>
         )}
