@@ -12,30 +12,28 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
-import LinkSelector from "./LinkSelector";
+import { Plus, Upload } from "lucide-react";
 
-const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
+const AddRecoveryCodeDialog = ({ onAdd, children }) => {
     const [open, setOpen] = useState(false);
-    const [label, setLabel] = useState(passkey.label || "");
-    const [secret, setSecret] = useState(passkey.secret || "");
-    const [links, setLinks] = useState(passkey.links || []);
+    const [label, setLabel] = useState("");
+    const [codes, setCodes] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!label.trim() || !secret.trim()) {
+        if (!label.trim() || !codes.trim()) {
             toast.error("Please fill in both fields");
             return;
         }
 
-        onUpdate(passkey.id, {
+        onAdd({
             label: label.trim(),
-            secret: secret.trim(),
-            links: links
+            codes: codes.trim(),
         });
 
         setOpen(false);
-        toast.success("Passkey updated successfully");
+        setLabel("");
+        setCodes("");
     };
 
     const handleFileUpload = (e) => {
@@ -44,7 +42,7 @@ const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            setSecret(event.target.result);
+            setCodes(event.target.result);
             toast.success("File content loaded");
         };
         reader.readAsText(file);
@@ -57,51 +55,48 @@ const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Edit Passkey</DialogTitle>
+                    <DialogTitle>Add Recovery Codes</DialogTitle>
                     <DialogDescription>
-                        Update your recovery codes or backup keys securely.
+                        Store your account recovery codes or emergency backup keys.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor="edit-pk-label">Label</Label>
+                        <Label htmlFor="rc-label">Service / Platform</Label>
                         <Input
-                            id="edit-pk-label"
-                            placeholder="e.g. GitHub Recovery Codes"
+                            id="rc-label"
+                            placeholder="e.g. Google, Discord, GitHub"
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
                         />
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label htmlFor="edit-pk-secret">Secret / Code</Label>
+                            <Label htmlFor="rc-codes">Recovery Codes</Label>
                             <div className="relative">
                                 <input
                                     type="file"
-                                    id="edit-upload-pk"
+                                    id="upload-rc"
                                     className="hidden"
                                     accept=".txt, .text, *"
                                     onChange={handleFileUpload}
                                 />
-                                <Label htmlFor="edit-upload-pk" className="cursor-pointer text-xs text-purple-500 hover:text-purple-600 flex items-center gap-1">
+                                <Label htmlFor="upload-rc" className="cursor-pointer text-xs text-rose-500 hover:text-rose-600 flex items-center gap-1">
                                     <Upload className="h-3 w-3" />
                                     Upload File
                                 </Label>
                             </div>
                         </div>
                         <Textarea
-                            id="edit-pk-secret"
-                            placeholder="Paste your codes here..."
-                            value={secret}
-                            onChange={(e) => setSecret(e.target.value)}
-                            className="min-h-[100px] font-mono text-sm leading-relaxed"
+                            id="rc-codes"
+                            placeholder="Paste your backup codes here..."
+                            value={codes}
+                            onChange={(e) => setCodes(e.target.value)}
+                            className="min-h-[150px] font-mono text-xs leading-relaxed"
                         />
                     </div>
-
-                    <LinkSelector currentLinks={links} onLinksChange={setLinks} />
-
-                    <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                        Update Passkey
+                    <Button type="submit" className="w-full bg-rose-600 hover:bg-rose-700">
+                        Store Recovery Codes
                     </Button>
                 </form>
             </DialogContent>
@@ -109,4 +104,4 @@ const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
     );
 };
 
-export default EditPasskeyDialog;
+export default AddRecoveryCodeDialog;
