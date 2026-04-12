@@ -11,7 +11,9 @@ const Bar = () => {
     { path: "/", icon: "bi-key", label: "Passwords" },
     { path: "/otps", icon: "bi-qr-code-scan", label: "OTPs" },
     { path: "/backup-codes", icon: "bi-file-lock", label: "Backup" },
+    { path: "/recovery-codes", icon: "bi-shield-lock-fill", label: "Recovery" },
     { path: "/env-files", icon: "bi-file-binary-fill", label: "Env Files" },
+    { path: "/connections", icon: "bi-diagram-3-fill", label: "Connections" },
     { path: "/settings", icon: "bi-gear-wide-connected", label: "Settings" },
   ];
 

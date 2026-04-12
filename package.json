@@ -28,6 +28,9 @@
   },
   "main": ".vite/build/main.js",
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@osmn-byhn/changelog-github-core": "^1.0.0",
     "@osmn-byhn/changelog-github-updater": "^1.0.3",
     "@radix-ui/react-checkbox": "^1.3.3",

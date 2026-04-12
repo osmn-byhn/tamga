@@ -13,11 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
+import LinkSelector from "./LinkSelector";
 
 const EditEnvDialog = ({ envItem, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
     const [projectName, setProjectName] = useState(envItem.projectName?.projectName || envItem.projectName || "");
     const [content, setContent] = useState(envItem.content || "");
+    const [links, setLinks] = useState(envItem.links || []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -29,6 +31,7 @@ const EditEnvDialog = ({ envItem, onUpdate, children }) => {
         onUpdate(envItem.id, {
             projectName: projectName.trim(),
             content: content.trim(),
+            links: links
         });
 
         setOpen(false);
@@ -96,6 +99,8 @@ const EditEnvDialog = ({ envItem, onUpdate, children }) => {
                             className="min-h-[200px] font-mono text-sm"
                         />
                     </div>
+
+                    <LinkSelector currentLinks={links} onLinksChange={setLinks} />
 
                     <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white">
                         Update Environment Variables

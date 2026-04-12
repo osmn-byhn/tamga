@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, ShieldCheck, Key } from "lucide-react";
-import PasskeyCard from "@/components/PasskeyCard";
-import AddPasskeyDialog from "@/components/AddPasskeyDialog";
+import { Plus, ShieldAlert, Key, Terminal } from "lucide-react";
+import RecoveryCodeCard from "@/components/RecoveryCodeCard";
+import AddRecoveryCodeDialog from "@/components/AddRecoveryCodeDialog";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -23,9 +23,9 @@ import { useAuth } from "@/context/AuthContext";
 import GroupCard from "@/components/GroupCard";
 import RenameGroupDialog from "@/components/RenameGroupDialog";
 
-const Passkeys = () => {
+const RecoveryCodes = () => {
   const { getData, updateData } = useAuth();
-  const [passkeys, setPasskeys] = useState([]);
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState(null);
   const [combineTargetId, setCombineTargetId] = useState(null);
@@ -40,91 +40,47 @@ const Passkeys = () => {
   );
 
   useEffect(() => {
-    const loadPasskeys = async () => {
+    const loadData = async () => {
       setLoading(true);
-      const data = await getData("tamga-passkeys");
+      const data = await getData("tamga-recovery-codes");
       if (data) {
-        setPasskeys(data);
+        setRecoveryCodes(data);
       }
       setLoading(false);
     };
-    loadPasskeys();
+    loadData();
   }, [getData]);
 
-  const savePasskeys = async (newPasskeys) => {
-    setPasskeys(newPasskeys);
-    await updateData("tamga-passkeys", newPasskeys);
+  const saveRecoveryCodes = async (newItems) => {
+    setRecoveryCodes(newItems);
+    await updateData("tamga-recovery-codes", newItems);
   };
 
-  const handleAddPasskey = async ({ label, secret }) => {
-    const newPasskey = {
+  const handleAdd = async ({ label, codes }) => {
+    const newItem = {
       id: Date.now(),
       label,
-      secret,
+      codes,
       createdAt: new Date().toISOString(),
       links: []
     };
-    const updated = [newPasskey, ...passkeys];
-    await savePasskeys(updated);
-    toast.success("Passkey added successfully");
+    const updated = [newItem, ...recoveryCodes];
+    await saveRecoveryCodes(updated);
+    toast.success("Recovery codes added");
   };
 
-  const handleDeletePasskey = async (id) => {
-    const updated = passkeys.filter(pk => pk.id !== id);
-    await savePasskeys(updated);
-    toast.success("Passkey removed");
+  const handleDelete = async (id) => {
+    const updated = recoveryCodes.filter(i => i.id !== id);
+    await saveRecoveryCodes(updated);
+    toast.success("Item removed");
   };
 
-  const handleUpdatePasskey = async (id, updatedData) => {
-    const oldItem = passkeys.find(i => String(i.id) === String(id));
-    const oldLinks = oldItem?.links || [];
-    const newLinks = updatedData.links || [];
-
-    // 1. Update the item itself
-    const updated = passkeys.map(pk =>
-      pk.id === id ? { ...pk, ...updatedData } : pk
+  const handleUpdate = async (id, updatedData) => {
+    const updated = recoveryCodes.map(i =>
+      i.id === id ? { ...i, ...updatedData } : i
     );
-    await savePasskeys(updated);
-
-    // 2. Handle Bi-directional links
-    // Added links
-    const added = newLinks.filter(nl => !oldLinks.some(ol => ol.type === nl.type && String(ol.id) === String(nl.id)));
-    for (const link of added) {
-      const sKey = link.type === 'password' ? 'tamga-passwords' : 
-                   link.type === 'otp' ? 'tamga-otp-uris' :
-                   link.type === 'env' ? 'tamga-envs' :
-                   'tamga-passkeys';
-      const items = await getData(sKey);
-      const updatedItems = items.map(i => {
-        if (String(i.id) === String(link.id)) {
-          const links = i.links || [];
-          if (!links.some(l => l.type === 'passkey' && String(l.id) === String(id))) {
-            return { ...i, links: [...links, { type: 'passkey', id }] };
-          }
-        }
-        return i;
-      });
-      await updateData(sKey, updatedItems);
-    }
-
-    // Removed links
-    const removed = oldLinks.filter(ol => !newLinks.some(nl => nl.type === ol.type && String(nl.id) === String(ol.id)));
-    for (const link of removed) {
-      const sKey = link.type === 'password' ? 'tamga-passwords' : 
-                   link.type === 'otp' ? 'tamga-otp-uris' :
-                   link.type === 'env' ? 'tamga-envs' :
-                   'tamga-passkeys';
-      const items = await getData(sKey);
-      const updatedItems = items.map(i => {
-        if (String(i.id) === String(link.id)) {
-          return { ...i, links: (i.links || []).filter(l => !(l.type === 'passkey' && String(l.id) === String(id))) };
-        }
-        return i;
-      });
-      await updateData(sKey, updatedItems);
-    }
-
-    toast.success("Passkey updated");
+    await saveRecoveryCodes(updated);
+    toast.success("Item updated");
   };
 
   const handleDragStart = (event) => {
@@ -143,19 +99,21 @@ const Passkeys = () => {
       setCombineTargetId(over.id);
     } else {
       setCombineTargetId(null);
-      setPasskeys((items) => {
-        const oldIndex = items.findIndex((i) => String(i.id) === String(active.id));
-        const newIndex = items.findIndex((i) => String(i.id) === String(over.id));
+      if (active.id !== over.id) {
+        setRecoveryCodes((items) => {
+          const oldIndex = items.findIndex((i) => String(i.id) === String(active.id));
+          const newIndex = items.findIndex((i) => String(i.id) === String(over.id));
 
-        if (oldIndex !== -1 && newIndex !== -1) {
-          return arrayMove(items, oldIndex, newIndex);
-        }
-        return items;
-      });
+          if (oldIndex !== -1 && newIndex !== -1) {
+            return arrayMove(items, oldIndex, newIndex);
+          }
+          return items;
+        });
+      }
     }
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over, collisions } = event;
     setActiveId(null);
     setCombineTargetId(null);
@@ -164,7 +122,7 @@ const Passkeys = () => {
        const isCombine = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
        
        if (isCombine) {
-         setPasskeys((items) => {
+           let items = [...recoveryCodes];
            let overItem = items.find(i => String(i.id) === String(over.id));
            let parentGroup = null;
 
@@ -182,7 +140,7 @@ const Passkeys = () => {
            }
            
            const activeItem = items.find(i => String(i.id) === String(active.id));
-           if (!activeItem || !overItem) return items;
+           if (!activeItem || !overItem) return;
 
            let updated;
            if (parentGroup) {
@@ -211,41 +169,41 @@ const Passkeys = () => {
              updated.splice(items.findIndex(i => i.id === overItem.id), 0, newGroup);
              setRenameGroupData({ id: newGroupId, name: "New Group" });
            }
-           savePasskeys(updated);
-           return updated;
-         });
+           await saveRecoveryCodes(updated);
        } else {
-         savePasskeys(passkeys);
+         await saveRecoveryCodes(recoveryCodes);
        }
+    } else {
+      await saveRecoveryCodes(recoveryCodes);
     }
   };
 
-  const onRenameGroup = (id, newName) => {
-    const updated = passkeys.map(i => {
+  const onRenameGroup = async (id, newName) => {
+    const updated = recoveryCodes.map(i => {
       if (i.id === id) return { ...i, name: newName };
       return i;
     });
-    savePasskeys(updated);
+    await saveRecoveryCodes(updated);
   };
 
-  const onDeleteGroup = (id) => {
-    const updated = passkeys.filter(i => i.id !== id);
-    savePasskeys(updated);
-    toast.success("Group and its contents removed");
+  const onDeleteGroup = async (id) => {
+    const updated = recoveryCodes.filter(i => i.id !== id);
+    await saveRecoveryCodes(updated);
+    toast.success("Group removed");
   };
 
-  const onUngroup = (id) => {
-    const group = passkeys.find(i => i.id === id);
+  const onUngroup = async (id) => {
+    const group = recoveryCodes.find(i => i.id === id);
     if (!group) return;
     const contents = group.items || [];
-    const updated = passkeys.filter(i => i.id !== id);
+    const updated = recoveryCodes.filter(i => i.id !== id);
     updated.push(...contents);
-    savePasskeys(updated);
-    toast.success("Items extracted from group");
+    await saveRecoveryCodes(updated);
+    toast.success("Items ungrouped");
   };
 
-  const handleUpdateNestedPasskey = async (groupId, itemId, updatedData) => {
-    const updated = passkeys.map(g => {
+  const handleUpdateNested = async (groupId, itemId, updatedData) => {
+    const updated = recoveryCodes.map(g => {
         if (g.id === groupId) {
             return {
                 ...g,
@@ -254,11 +212,11 @@ const Passkeys = () => {
         }
         return g;
     });
-    savePasskeys(updated);
+    await saveRecoveryCodes(updated);
   };
 
-  const handleDeleteNestedPasskey = async (groupId, itemId) => {
-    const updated = passkeys.map(g => {
+  const handleDeleteNested = async (groupId, itemId) => {
+    const updated = recoveryCodes.map(g => {
         if (g.id === groupId) {
             return {
                 ...g,
@@ -267,7 +225,7 @@ const Passkeys = () => {
         }
         return g;
     });
-    savePasskeys(updated);
+    await saveRecoveryCodes(updated);
   };
 
   return (
@@ -276,31 +234,33 @@ const Passkeys = () => {
         <header className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-border">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
-              <ShieldCheck className="h-8 w-8 text-purple-500" />
-              Passkeys & Backup Codes
+              <ShieldAlert className="h-8 w-8 text-rose-500" />
+              Recovery Codes
             </h1>
-            <p className="text-muted-foreground mt-1">Securely store your recovery codes and text secrets.</p>
+            <p className="text-muted-foreground mt-1">Safe haven for your one-time backup and recovery keys.</p>
           </div>
-          <AddPasskeyDialog onAdd={handleAddPasskey}>
-            <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all bg-purple-600 hover:bg-purple-700">
+          <AddRecoveryCodeDialog onAdd={handleAdd}>
+            <Button size="lg" className="gap-2 shadow-lg hover:shadow-xl transition-all bg-rose-600 hover:bg-rose-700">
               <Plus className="h-5 w-5" />
-              Add New Secret
+              Add Backup Keys
             </Button>
-          </AddPasskeyDialog>
+          </AddRecoveryCodeDialog>
         </header>
 
-        {passkeys.length === 0 ? (
+        {loading ? (
+            <div className="flex justify-center py-20">Loading...</div>
+        ) : recoveryCodes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
-              <Key className="h-10 w-10 text-gray-400" />
+            <div className="w-24 h-24 bg-rose-50 dark:bg-rose-950/20 rounded-full flex items-center justify-center mb-6">
+              <ShieldAlert className="h-10 w-10 text-rose-300" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No secrets stored</h3>
+            <h3 className="text-xl font-semibold mb-2">No recovery codes</h3>
             <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-              Keep your backup codes and recovery keys safe here.
+              Keep your account recovery keys safe. Never get locked out again.
             </p>
-            <AddPasskeyDialog onAdd={handleAddPasskey}>
-              <Button variant="outline" className="border-gray-700 cursor-pointer text-black dark:border-gray-300 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-800">Store your first secret</Button>
-            </AddPasskeyDialog>
+            <AddRecoveryCodeDialog onAdd={handleAdd}>
+              <Button variant="outline" className="border-rose-200 dark:border-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950/30">Store codes now</Button>
+            </AddRecoveryCodeDialog>
           </div>
         ) : (
           <DndContext
@@ -312,10 +272,10 @@ const Passkeys = () => {
           >
             <div className="flex flex-col gap-4">
               <SortableContext
-                items={passkeys.map((i) => i.id)}
+                items={recoveryCodes.map((i) => i.id)}
                 strategy={rectSortingStrategy}
               >
-                {passkeys.map((item) => (
+                {recoveryCodes.map((item) => (
                   <SortableItem key={item.id} id={item.id}>
                     {item.type === 'group' ? (
                         <GroupCard 
@@ -327,21 +287,21 @@ const Passkeys = () => {
                         >
                             <div className="space-y-4">
                                 {(item.items || []).map(nestedItem => (
-                                    <PasskeyCard 
+                                    <RecoveryCodeCard 
                                         key={nestedItem.id} 
-                                        passkey={nestedItem} 
-                                        onDelete={(id) => handleDeleteNestedPasskey(item.id, id)}
-                                        onUpdate={(id, data) => handleUpdateNestedPasskey(item.id, id, data)}
+                                        recovery={nestedItem} 
+                                        onDelete={(id) => handleDeleteNested(item.id, id)}
+                                        onUpdate={(id, data) => handleUpdateNested(item.id, id, data)}
                                         isGroupingTarget={combineTargetId === nestedItem.id}
                                     />
                                 ))}
                             </div>
                         </GroupCard>
                     ) : (
-                        <PasskeyCard
-                          passkey={item}
-                          onDelete={handleDeletePasskey}
-                          onUpdate={handleUpdatePasskey}
+                        <RecoveryCodeCard
+                          recovery={item}
+                          onDelete={handleDelete}
+                          onUpdate={handleUpdate}
                           isGroupingTarget={combineTargetId === item.id}
                         />
                     )}
@@ -352,7 +312,6 @@ const Passkeys = () => {
           </DndContext>
         )}
       </div>
-      <Toaster />
       
       {renameGroupData && (
         <RenameGroupDialog 
@@ -366,4 +325,4 @@ const Passkeys = () => {
   );
 };
 
-export default Passkeys;
+export default RecoveryCodes;
