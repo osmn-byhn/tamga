@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Terminal, Trash2, FileJson, Pencil } from "lucide-react";
+import { Copy, Eye, EyeOff, Terminal, Trash2, FileJson, Pencil, ExternalLink, GripVertical } from "lucide-react";
 import EditEnvDialog from "./EditEnvDialog";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -13,7 +15,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 
-const EnvCard = ({ envItem, onDelete, onUpdate }) => {
+const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
     const { hideSensitiveData } = useSettings();
     const [showFull, setShowFull] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
@@ -31,8 +33,18 @@ const EnvCard = ({ envItem, onDelete, onUpdate }) => {
 
     return (
         <>
-            <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 bg-card border-border">
+            <Card className={cn(
+                "relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 bg-card border-border",
+                isGroupingTarget && "ring-4 ring-green-500 shadow-2xl scale-[1.02] z-20 brightness-110"
+            )}>
                 <CardContent className="p-5">
+                    <div 
+                        {...dragHandleProps} 
+                        className="absolute top-2 right-2 p-1 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
+                        title="Drag to reorder"
+                    >
+                        <GripVertical className="h-4 w-4" />
+                    </div>
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
@@ -62,6 +74,18 @@ const EnvCard = ({ envItem, onDelete, onUpdate }) => {
                         </div>
 
                         <div className="flex flex-col gap-1">
+                            {envItem.links?.length > 0 && (
+                                <Link to={`/details/env/${envItem.id}`}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                        title="View Details & Links"
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
+                                    </Button>
+                                </Link>
+                            )}
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -91,15 +115,16 @@ const EnvCard = ({ envItem, onDelete, onUpdate }) => {
                                 <Copy className="h-4 w-4" />
                             </Button>
                             {onDelete && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                                    onClick={() => onDelete(envItem.id)}
-                                    title="Delete"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <DeleteConfirmDialog onConfirm={() => onDelete(envItem.id)}>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </DeleteConfirmDialog>
                             )}
                         </div>
                     </div>

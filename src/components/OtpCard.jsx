@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Trash2, Eye, EyeOff, Share2 } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Share2, ExternalLink, Pencil, GripVertical } from "lucide-react";
 import ExportOtpDialog from "./ExportOtpDialog";
+import EditOtpDialog from "./EditOtpDialog";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import * as OTPAuth from "otpauth";
 
-const OtpCard = ({ otpUri, onDelete }) => {
+const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
+    const otpUri = otpItem.uri;
     const { hideSensitiveData } = useSettings();
     const [totp, setTotp] = useState(null);
     const [code, setCode] = useState("");
@@ -57,8 +61,18 @@ const OtpCard = ({ otpUri, onDelete }) => {
     const progressColor = timeLeft < 5 ? "text-red-500" : "text-primary";
 
     return (
-        <Card className="relative overflow-hidden group hover:shadow-md transition-all duration-300 border-l-4 border-l-primary/50 bg-card border-border">
+        <Card className={cn(
+            "relative overflow-hidden group hover:shadow-md transition-all duration-300 border-l-4 border-l-primary/50 bg-card border-border",
+            isGroupingTarget && "ring-4 ring-primary shadow-2xl scale-[1.02] z-20 brightness-110"
+        )}>
             <CardContent className="p-4 flex items-center justify-between">
+                <div 
+                    {...dragHandleProps} 
+                    className="absolute top-2 right-2 p-1 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing"
+                    title="Drag to reorder"
+                >
+                    <GripVertical className="h-4 w-4" />
+                </div>
                 <div className="flex flex-col gap-1 min-w-0 flex-1">
                     <p className="text-sm font-medium text-muted-foreground truncate" title={totp.issuer}>
                         {totp.issuer || "Unknown Issuer"}
@@ -100,6 +114,18 @@ const OtpCard = ({ otpUri, onDelete }) => {
                     </div>
 
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {otpItem.links?.length > 0 && (
+                            <Link to={`/details/otp/${otpItem.id}`}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="View Details & Links">
+                                    <ExternalLink className="h-4 w-4" />
+                                </Button>
+                            </Link>
+                        )}
+                        <EditOtpDialog otpItem={otpItem} onUpdate={onUpdate}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="EditAccount">
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        </EditOtpDialog>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -118,14 +144,16 @@ const OtpCard = ({ otpUri, onDelete }) => {
                             </Button>
                         </ExportOtpDialog>
                         {onDelete && (
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => onDelete(otpUri)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <DeleteConfirmDialog onConfirm={() => onDelete(otpItem.id)}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+                                    title="Delete"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </DeleteConfirmDialog>
                         )}
                     </div>
                 </div>
