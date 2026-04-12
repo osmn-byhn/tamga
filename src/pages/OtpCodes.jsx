@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import OtpCard from "@/components/OtpCard";
@@ -29,6 +29,18 @@ const OtpCodes = () => {
   const [activeId, setActiveId] = useState(null);
   const [combineTargetId, setCombineTargetId] = useState(null);
   const [renameGroupData, setRenameGroupData] = useState(null);
+  const isShiftPressed = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Shift') isShiftPressed.current = true; };
+    const handleKeyUp = (e) => { if (e.key === 'Shift') isShiftPressed.current = false; };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -154,7 +166,7 @@ const OtpCodes = () => {
     }
     
     // Detect if we should show grouping feedback
-    const isCombineReady = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
+    const isCombineReady = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
     if (isCombineReady) {
       setCombineTargetId(over.id);
     } else {
@@ -179,7 +191,7 @@ const OtpCodes = () => {
 
     if (over && active.id !== over.id) {
        // Relaxed threshold: 0.5
-       const isCombine = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
+       const isCombine = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
        
        if (isCombine) {
          setOtpUris((items) => {
@@ -232,13 +244,13 @@ const OtpCodes = () => {
              };
              updated = items.filter(i => i.id !== active.id && i.id !== overItem.id);
              updated.splice(items.findIndex(i => i.id === overItem.id), 0, newGroup);
-             setRenameGroupData({ id: newGroupId, name: "New Group" });
+             setRenameGroupData({ id: newGroupId, name: "New Group", isJustCreated: true });
            }
            saveOtps(updated);
            return updated;
          });
        } else {
-         saveOtps(otpUris);
+         setOtpUris(prev => { saveOtps(prev); return prev; });
        }
     }
   };
@@ -377,7 +389,12 @@ const OtpCodes = () => {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => setRenameGroupData(null)}
+          onClose={() => {
+            if (renameGroupData?.isJustCreated) {
+              onUngroup(renameGroupData.id);
+            }
+            setRenameGroupData(null);
+          }}
           initialName={renameGroupData.name}
           onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
         />
