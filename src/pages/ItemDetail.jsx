@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,24 +11,29 @@ import {
     DialogTitle, 
     DialogTrigger 
 } from "@/components/ui/dialog";
-import { ArrowLeft, Link as LinkIcon, Shield, Key, Terminal, Smartphone, Trash2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Link as LinkIcon, Shield, Key, Terminal, Smartphone, Trash2, ExternalLink, ShieldAlert, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+// Component Imports
 import OtpCard from "@/components/OtpCard";
 import EnvCard from "@/components/EnvCard";
 import PasskeyCard from "@/components/PasskeyCard";
+import PasswordCard from "@/components/PasswordCard";
+import RecoveryCodeCard from "@/components/RecoveryCodeCard";
 import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 import LinkSelector from "@/components/LinkSelector";
 
 const ItemDetail = () => {
     const { type, id } = useParams();
     const navigate = useNavigate();
-    const { getData, toggleLink } = useAuth();
+    const { getData, toggleLink, updateData } = useAuth();
     
     const [item, setItem] = useState(null);
     const [linkedItems, setLinkedItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isLinkSelectorOpen, setIsLinkSelectorOpen] = useState(false);
+    const [dataRefresh, setDataRefresh] = useState(0);
 
     const getStorageKey = (t) => {
         switch (t) {
@@ -36,6 +41,7 @@ const ItemDetail = () => {
             case 'otp': return 'tamga-otp-uris';
             case 'env': return 'tamga-envs';
             case 'passkey': return 'tamga-passkeys';
+            case 'recovery': return 'tamga-recovery-codes';
             default: return null;
         }
     };
@@ -80,49 +86,56 @@ const ItemDetail = () => {
 
     useEffect(() => {
         loadData();
-    }, [loadData]);
+    }, [loadData, dataRefresh]);
+
+    const handleUpdate = async (idToUpdate, updatedData) => {
+        const sKey = getStorageKey(type);
+        const allItems = await getData(sKey);
+        const updated = allItems.map(i => String(i.id) === String(idToUpdate) ? { ...i, ...updatedData } : i);
+        await updateData(sKey, updated);
+        setDataRefresh(prev => prev + 1);
+        toast.success("Item updated");
+    };
 
     const handleUnlink = async (linkedType, linkedId) => {
         await toggleLink({ type, id }, { type: linkedType, id: linkedId });
-        loadData();
+        setDataRefresh(prev => prev + 1);
+        toast.success("Connection removed");
     };
 
-    if (loading) return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading linked data...</div>;
+    if (loading && !item) return (
+        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+            <div className="p-4 rounded-full bg-primary/10 animate-pulse">
+                <Zap className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-muted-foreground font-medium">Synchronizing Security Hub...</p>
+        </div>
+    );
 
-    const getIcon = (t, className = "h-6 w-6") => {
-        switch (t) {
-            case 'password': return <Shield className={cn(className, "text-blue-500")} />;
-            case 'otp': return <Smartphone className={cn(className, "text-purple-500")} />;
-            case 'env': return <Terminal className={cn(className, "text-green-500")} />;
-            case 'passkey': return <Key className={cn(className, "text-orange-500")} />;
+    const renderCard = (targetItem, targetType, isMain = false) => {
+        const commonProps = {
+            onUpdate: (id, data) => handleUpdate(id, data),
+            // When in hub, "Delete" on linked items means "Unlink"
+            onDelete: !isMain ? (id) => handleUnlink(targetType, id) : null,
+            showDetailLink: !isMain // Don't show detail link for the main item itself
+        };
+
+        switch (targetType) {
+            case 'password': return <PasswordCard item={targetItem} {...commonProps} />;
+            case 'otp': return <OtpCard otpItem={targetItem} {...commonProps} />;
+            case 'env': return <EnvCard envItem={targetItem} {...commonProps} />;
+            case 'passkey': return <PasskeyCard passkey={targetItem} {...commonProps} />;
+            case 'recovery': return <RecoveryCodeCard recovery={targetItem} {...commonProps} />;
             default: return null;
         }
     };
 
-    const getItemLabel = (targetItem, targetType) => {
-        if (!targetItem) return "Unknown";
-        switch (targetType) {
-            case 'password': return targetItem.platform || "Untitled Password";
-            case 'env': 
-                return typeof targetItem.projectName === 'object' 
-                    ? (targetItem.projectName.projectName || item.projectName.id || "Unknown Project") 
-                    : (targetItem.projectName || "Untitled Project");
-            case 'passkey': return targetItem.label || "Untitled Passkey";
-            case 'otp': 
-                try {
-                    const uriPart = targetItem.uri.split('?')[0].split('/').pop();
-                    const label = decodeURIComponent(uriPart.includes(':') ? uriPart.split(':')[1] : uriPart);
-                    return label || "OTP Account";
-                } catch(e) { return "OTP Account"; }
-            default: return "Unknown";
-        }
-    };
-
     const categories = [
-        { id: 'password', name: 'Passwords', icon: Shield },
-        { id: 'otp', name: 'Authenticator (OTP)', icon: Smartphone },
-        { id: 'passkey', name: 'Passkeys', icon: Key },
-        { id: 'env', name: 'Environment Variables', icon: Terminal },
+        { id: 'password', name: 'Passwords', icon: Shield, color: 'text-blue-500' },
+        { id: 'otp', name: 'Authenticator (OTP)', icon: Smartphone, color: 'text-purple-500' },
+        { id: 'passkey', name: 'Passkeys', icon: Key, color: 'text-orange-500' },
+        { id: 'recovery', name: 'Recovery Codes', icon: ShieldAlert, color: 'text-rose-500' },
+        { id: 'env', name: 'Env Files', icon: Terminal, color: 'text-green-500' },
     ];
 
     const linkedByCategory = categories.map(cat => ({
@@ -131,155 +144,119 @@ const ItemDetail = () => {
     })).filter(cat => cat.items.length > 0);
 
     return (
-        <div className="container mx-auto p-6 max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
-            <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 gap-2 hover:bg-transparent -ml-2 text-muted-foreground hover:text-foreground transition-colors group">
-                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" /> Back
+        <div className="container mx-auto p-4 md:p-8 max-w-4xl animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
+            <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 gap-2 hover:bg-muted -ml-2 text-muted-foreground hover:text-foreground transition-all">
+                <ArrowLeft className="h-4 w-4" /> Back to Vault
             </Button>
 
-            <header className="flex items-center gap-6 mb-10">
-                <div className="p-5 rounded-3xl bg-muted/30 border border-border/50 shadow-inner">
-                    {getIcon(type, "h-10 w-10")}
-                </div>
-                <div>
-                    <p className="text-xs uppercase font-extrabold tracking-[0.2em] text-primary/60 mb-1">{type}</p>
-                    <h1 className="text-4xl font-extrabold tracking-tight">
-                        {getItemLabel(item, type)}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                            <Zap className="h-5 w-5 text-primary" />
+                        </div>
+                        <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Security Hub</h2>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter">
+                        Vault Access
                     </h1>
+                    <p className="text-muted-foreground font-medium">All related security credentials in one consolidated view.</p>
                 </div>
+
+                <Dialog open={isLinkSelectorOpen} onOpenChange={setIsLinkSelectorOpen}>
+                    <DialogTrigger asChild>
+                        <Button size="lg" className="gap-2 shadow-xl shadow-primary/20 bg-primary hover:scale-[1.02] transition-transform">
+                            <LinkIcon className="h-4 w-4" />
+                            Manage Connections
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                        <DialogHeader>
+                            <DialogTitle className="text-2xl font-bold">Connect Insights</DialogTitle>
+                            <DialogDescription>
+                                Build your security graph by linking related items.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <LinkSelector 
+                            rootItem={{ type, id }}
+                            currentLinks={item?.links || []} 
+                            onLinksChange={() => loadData()}
+                        />
+                        <Button onClick={() => setIsLinkSelectorOpen(false)} className="w-full mt-4">Close Settings</Button>
+                    </DialogContent>
+                </Dialog>
             </header>
 
-            <div className="grid gap-12">
-                {/* Main Item Card */}
-                <Card className="border-none bg-muted/20 shadow-none ring-1 ring-border">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Primary Content</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                        {type === 'otp' && <OtpCard otpItem={item} />}
-                        {type === 'env' && <EnvCard envItem={item} />}
-                        {type === 'passkey' && <PasskeyCard passkey={item} />}
-                        {type === 'password' && (
-                            <div className="p-6 bg-card rounded-2xl border border-border shadow-sm space-y-4">
-                                <div className="space-y-1">
-                                    <p className="font-bold text-xl">{item.platform}</p>
-                                    <p className="text-sm text-muted-foreground font-medium">{item.username}</p>
-                                </div>
-                                <div className="p-3 bg-muted/50 rounded-lg border border-border/50 font-mono text-center tracking-widest text-primary/50 text-sm">
-                                    ••••••••••••••••
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+            <div className="space-y-16">
+                {/* Primary Item Section */}
+                <section className="space-y-6">
+                    <div className="flex items-center gap-4">
+                        <span className="h-8 w-1 bg-primary rounded-full" />
+                        <h3 className="text-xl font-bold tracking-tight">Access Point</h3>
+                    </div>
+                    {item && renderCard(item, type, true)}
+                </section>
 
-                {/* Linked Items Section */}
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <LinkIcon className="h-6 w-6 text-primary" />
-                                Linked Accounts
-                            </h2>
-                            <p className="text-sm text-muted-foreground">Connected security items that share context with this account.</p>
-                        </div>
-                        
-                        <Dialog open={isLinkSelectorOpen} onOpenChange={setIsLinkSelectorOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="gap-2 shadow-lg shadow-primary/20">
-                                    <LinkIcon className="h-4 w-4" />
-                                    Manage Links
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px]">
-                                <DialogHeader>
-                                    <DialogTitle>Manage Connections</DialogTitle>
-                                    <DialogDescription>
-                                        Link other items from your vault to build a security graph.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <LinkSelector 
-                                    rootItem={{ type, id }}
-                                    currentLinks={item.links || []} 
-                                    onLinksChange={() => loadData()}
-                                />
-                                <div className="text-center mt-4">
-                                    <Button onClick={() => setIsLinkSelectorOpen(false)} variant="outline" className="w-full">Done</Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
+                {/* Linked Items Hub */}
+                <section className="space-y-8">
+                    <div className="flex items-center gap-4">
+                        <span className="h-8 w-1 bg-muted-foreground/30 rounded-full" />
+                        <h3 className="text-xl font-bold tracking-tight">Connected Security Layers</h3>
                     </div>
 
                     {linkedByCategory.length === 0 ? (
-                        <Card className="border-none bg-muted/10 ring-1 ring-border ring-dashed">
-                            <CardContent className="py-16 text-center space-y-4">
-                                <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto">
-                                    <LinkIcon className="h-8 w-8 text-muted-foreground/30" />
+                        <Card className="border-dashed bg-muted/5">
+                            <CardContent className="py-20 text-center flex flex-col items-center gap-4">
+                                <div className="p-4 rounded-full bg-muted/10">
+                                    <LinkIcon className="h-10 w-10 text-muted-foreground/20" />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-lg font-semibold">No connected items</p>
-                                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">Use the Manage Links button to connect secrets, passkeys, or env files.</p>
+                                    <p className="text-xl font-bold text-muted-foreground/80">Isolated Asset</p>
+                                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">This item currently has no security connections. Link OTPs, Passkeys or Envs to create a hub.</p>
                                 </div>
+                                <Button variant="outline" onClick={() => setIsLinkSelectorOpen(true)} className="mt-2">
+                                    Create First Connection
+                                </Button>
                             </CardContent>
                         </Card>
                     ) : (
-                        <div className="space-y-8">
+                        <div className="flex flex-col gap-12">
                             {linkedByCategory.map(cat => (
-                                <div key={`detail-cat-${cat.id}`} className="space-y-4">
-                                    <div className="flex items-center gap-2 px-2">
-                                        <cat.icon className="h-4 w-4 text-primary" />
-                                        <h3 className="text-xs uppercase font-extrabold tracking-widest text-muted-foreground">{cat.name}</h3>
-                                        <div className="h-px bg-border/50 flex-1 ml-2" />
+                                <div key={`hub-cat-${cat.id}`} className="space-y-6">
+                                    <div className="flex items-center gap-3 opacity-70">
+                                        <cat.icon className={cn("h-4 w-4", cat.color)} />
+                                        <span className="text-[10px] font-black uppercase tracking-[0.3em]">{cat.name}</span>
+                                        <div className="h-px bg-gradient-to-r from-border to-transparent flex-1" />
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="flex flex-col gap-4 pl-4 border-l border-border/50">
                                         {cat.items.map(linked => (
-                                            <Card key={`${linked.type}-${linked.id}`} className="group hover:ring-2 hover:ring-primary/20 transition-all border-none bg-card hover:shadow-md ring-1 ring-border">
-                                                <CardContent className="p-4 flex items-center justify-between">
-                                                    <div className="flex items-center gap-4 flex-1 min-w-0 pr-2">
-                                                        <div className="p-2.5 rounded-xl bg-muted/50">
-                                                            {getIcon(linked.type, "h-5 w-5")}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="font-bold truncate text-sm">
-                                                                {getItemLabel(linked, linked.type)}
-                                                            </p>
-                                                            {linked.type === 'password' && linked.username && (
-                                                                <p className="text-[10px] text-muted-foreground truncate">{linked.username}</p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 shrink-0">
-                                                        <Link to={`/details/${linked.type}/${linked.id}`}>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors">
-                                                                <ExternalLink className="h-4 w-4" />
-                                                            </Button>
-                                                        </Link>
-                                                        <DeleteConfirmDialog 
-                                                            onConfirm={() => handleUnlink(linked.type, linked.id)}
-                                                            title="Unlink Item?"
-                                                            description="Are you sure you want to remove the connection between these items?"
-                                                            confirmText="Unlink"
-                                                        >
-                                                            <Button 
-                                                                variant="ghost" 
-                                                                size="icon" 
-                                                                className="h-8 w-8 text-destructive/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </DeleteConfirmDialog>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
+                                            <div key={`${linked.type}-${linked.id}`} className="relative group">
+                                                {renderCard(linked, linked.type)}
+                                                <div className="absolute top-4 right-12 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <DeleteConfirmDialog 
+                                                        onConfirm={() => handleUnlink(linked.type, linked.id)}
+                                                        title="Unlink Component?"
+                                                        description="Remove this component from the Security Hub. The item will still exist in your vault."
+                                                        confirmText="Unlink"
+                                                    >
+                                                        <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-destructive hover:bg-destructive/10 gap-2">
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                            Unlink
+                                                        </Button>
+                                                    </DeleteConfirmDialog>
+                                                </div>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
-                </div>
+                </section>
             </div>
         </div>
     );
 };
 
 export default ItemDetail;
+

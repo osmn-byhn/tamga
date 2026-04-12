@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, ShieldAlert, Key, Terminal } from "lucide-react";
 import RecoveryCodeCard from "@/components/RecoveryCodeCard";
@@ -30,6 +30,18 @@ const RecoveryCodes = () => {
   const [activeId, setActiveId] = useState(null);
   const [combineTargetId, setCombineTargetId] = useState(null);
   const [renameGroupData, setRenameGroupData] = useState(null);
+  const isShiftPressed = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Shift') isShiftPressed.current = true; };
+    const handleKeyUp = (e) => { if (e.key === 'Shift') isShiftPressed.current = false; };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -94,7 +106,7 @@ const RecoveryCodes = () => {
       return;
     }
 
-    const isCombineReady = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
+    const isCombineReady = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
     if (isCombineReady) {
       setCombineTargetId(over.id);
     } else {
@@ -119,7 +131,7 @@ const RecoveryCodes = () => {
     setCombineTargetId(null);
 
     if (over && active.id !== over.id) {
-       const isCombine = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
+       const isCombine = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
        
        if (isCombine) {
            let items = [...recoveryCodes];
@@ -167,14 +179,14 @@ const RecoveryCodes = () => {
              };
              updated = items.filter(i => i.id !== active.id && i.id !== overItem.id);
              updated.splice(items.findIndex(i => i.id === overItem.id), 0, newGroup);
-             setRenameGroupData({ id: newGroupId, name: "New Group" });
+             setRenameGroupData({ id: newGroupId, name: "New Group", isJustCreated: true });
            }
            await saveRecoveryCodes(updated);
        } else {
-         await saveRecoveryCodes(recoveryCodes);
+         setRecoveryCodes(prev => { saveRecoveryCodes(prev); return prev; });
        }
     } else {
-      await saveRecoveryCodes(recoveryCodes);
+      setRecoveryCodes(prev => { saveRecoveryCodes(prev); return prev; });
     }
   };
 
@@ -316,7 +328,12 @@ const RecoveryCodes = () => {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => setRenameGroupData(null)}
+          onClose={() => {
+            if (renameGroupData?.isJustCreated) {
+              onUngroup(renameGroupData.id);
+            }
+            setRenameGroupData(null);
+          }}
           initialName={renameGroupData.name}
           onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
         />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Terminal, Code2 } from "lucide-react";
 import EnvCard from "@/components/EnvCard";
@@ -29,6 +29,18 @@ const Envs = () => {
   const [activeId, setActiveId] = useState(null);
   const [combineTargetId, setCombineTargetId] = useState(null);
   const [renameGroupData, setRenameGroupData] = useState(null);
+  const isShiftPressed = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Shift') isShiftPressed.current = true; };
+    const handleKeyUp = (e) => { if (e.key === 'Shift') isShiftPressed.current = false; };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -137,7 +149,7 @@ const Envs = () => {
       return;
     }
 
-    const isCombineReady = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
+    const isCombineReady = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
     if (isCombineReady) {
       setCombineTargetId(over.id);
     } else {
@@ -160,7 +172,7 @@ const Envs = () => {
     setCombineTargetId(null);
 
     if (over && active.id !== over.id) {
-       const isCombine = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
+       const isCombine = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
        
        if (isCombine) {
          setEnvItems((items) => {
@@ -208,13 +220,13 @@ const Envs = () => {
              };
              updated = items.filter(i => i.id !== active.id && i.id !== overItem.id);
              updated.splice(items.findIndex(i => i.id === overItem.id), 0, newGroup);
-             setRenameGroupData({ id: newGroupId, name: "New Group" });
+             setRenameGroupData({ id: newGroupId, name: "New Group", isJustCreated: true });
            }
            saveEnvs(updated);
            return updated;
          });
        } else {
-         saveEnvs(envItems);
+         setEnvItems(prev => { saveEnvs(prev); return prev; });
        }
     }
   };
@@ -356,7 +368,12 @@ const Envs = () => {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => setRenameGroupData(null)}
+          onClose={() => {
+            if (renameGroupData?.isJustCreated) {
+              onUngroup(renameGroupData.id);
+            }
+            setRenameGroupData(null);
+          }}
           initialName={renameGroupData.name}
           onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
         />

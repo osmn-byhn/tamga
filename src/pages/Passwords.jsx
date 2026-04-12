@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { Copy, RefreshCw, Check, Save, Trash2, Globe, User, Pencil, X, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
+import PasswordCard from "@/components/PasswordCard";
 import EditPasswordDialog from "@/components/EditPasswordDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,18 @@ export default function Passwords() {
   const [activeId, setActiveId] = useState(null);
   const [combineTargetId, setCombineTargetId] = useState(null);
   const [renameGroupData, setRenameGroupData] = useState(null);
+  const isShiftPressed = useRef(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => { if (e.key === 'Shift') isShiftPressed.current = true; };
+    const handleKeyUp = (e) => { if (e.key === 'Shift') isShiftPressed.current = false; };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -188,7 +201,7 @@ export default function Passwords() {
       return;
     }
 
-    const isCombineReady = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
+    const isCombineReady = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
     if (isCombineReady) {
       setCombineTargetId(over.id);
     } else {
@@ -211,7 +224,7 @@ export default function Passwords() {
     setCombineTargetId(null);
 
     if (over && active.id !== over.id) {
-       const isCombine = collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
+       const isCombine = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
        
        if (isCombine) {
          setPasswords((items) => {
@@ -262,13 +275,13 @@ export default function Passwords() {
              };
              updated = items.filter(i => i.id !== active.id && i.id !== foundOver.id);
              updated.splice(items.findIndex(i => i.id === foundOver.id), 0, newGroup);
-             setRenameGroupData({ id: newGroupId, name: "New Group" });
+             setRenameGroupData({ id: newGroupId, name: "New Group", isJustCreated: true });
            }
            savePasswords(updated);
            return updated;
          });
        } else {
-         savePasswords(passwords);
+         setPasswords(prev => { savePasswords(prev); return prev; });
        }
     }
   };
@@ -571,27 +584,21 @@ export default function Passwords() {
                             >
                               <div className="space-y-4">
                                 {(item.items || []).map(nestedItem => (
-                                  <PasswordHistoryItem 
+                                  <PasswordCard 
                                     key={nestedItem.id}
                                     item={nestedItem}
-                                    visibleIds={visibleIds}
-                                    toggleVisibility={toggleVisibility}
-                                    updatePassword={(id, data) => handleUpdateNestedPassword(item.id, id, data)}
-                                    deletePassword={(id) => handleDeleteNestedPassword(item.id, id)}
-                                    hideSensitiveData={hideSensitiveData}
+                                    onUpdate={(id, data) => handleUpdateNestedPassword(item.id, id, data)}
+                                    onDelete={(id) => handleDeleteNestedPassword(item.id, id)}
                                     isGroupingTarget={combineTargetId === nestedItem.id}
                                   />
                                 ))}
                               </div>
                             </GroupCard>
                           ) : (
-                            <PasswordHistoryItem 
+                            <PasswordCard 
                               item={item}
-                              visibleIds={visibleIds}
-                              toggleVisibility={toggleVisibility}
-                              updatePassword={updatePassword}
-                              deletePassword={deletePassword}
-                              hideSensitiveData={hideSensitiveData}
+                              onUpdate={updatePassword}
+                              onDelete={deletePassword}
                               isGroupingTarget={combineTargetId === item.id}
                             />
                           )}
@@ -609,7 +616,12 @@ export default function Passwords() {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => setRenameGroupData(null)}
+          onClose={() => {
+            if (renameGroupData?.isJustCreated) {
+              onUngroup(renameGroupData.id);
+            }
+            setRenameGroupData(null);
+          }}
           initialName={renameGroupData.name}
           onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
         />
@@ -618,94 +630,4 @@ export default function Passwords() {
   );
 }
 
-function PasswordHistoryItem({ item, visibleIds, toggleVisibility, updatePassword, deletePassword, hideSensitiveData, dragHandleProps, isGroupingTarget }) {
-  return (
-    <div className={cn(
-      "relative group rounded-lg transition-all duration-300",
-      isGroupingTarget && "ring-4 ring-primary shadow-2xl scale-[1.01] z-20 brightness-110"
-    )}>
-      <div 
-        {...dragHandleProps} 
-        className="absolute top-2 right-2 p-1 text-muted-foreground/30 hover:text-muted-foreground cursor-grab active:cursor-grabbing z-20"
-        title="Drag to reorder"
-      >
-        <GripVertical className="h-4 w-4" />
-      </div>
-      <div className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-border bg-muted/30 gap-4 transition-all duration-200">
-        <div className="space-y-1 flex-1">
-          <div className="flex items-center gap-2">
-            {item.platform && (
-              <span className="text-xs font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full">
-                {item.platform}
-              </span>
-            )}
-            {item.username && (
-              <span className="text-xs text-muted-foreground">
-                ({item.username})
-              </span>
-            )}
-          </div>
-          <div className={cn(
-            "font-mono break-all text-lg transition-all duration-300",
-            (hideSensitiveData && !visibleIds.has(item.id)) ? "blur-md select-none" : "blur-0"
-          )}>
-            {item.value}
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-          {item.links?.length > 0 && (
-            <Link to={`/details/password/${item.id}`}>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="text-muted-foreground hover:text-foreground"
-                title="View Details & Links"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </Link>
-          )}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => toggleVisibility(item.id)}
-            title={visibleIds.has(item.id) ? "Hide" : "Show"}
-          >
-            {visibleIds.has(item.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-          <EditPasswordDialog passwordItem={item} onUpdate={updatePassword}>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </EditPasswordDialog>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="text-muted-foreground hover:text-foreground"
-            onClick={() => {
-              navigator.clipboard.writeText(item.value);
-              toast.success("Copied to clipboard");
-            }}
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-          <DeleteConfirmDialog onConfirm={() => deletePassword(item.id)}>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </DeleteConfirmDialog>
-        </div>
-      </div>
-    </div>
-  );
-}
