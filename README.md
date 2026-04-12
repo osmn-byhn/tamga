@@ -1,56 +1,56 @@
-# Tamga
+<div align="center">
+  <img src="public/tamga.png" alt="Tamga Logo" width="150" />
+</div>
 
-**Tamga** is a comprehensive digital vault and security management platform designed for developers and security-conscious users, featuring a **local-first** and **zero-knowledge** architecture.
+# Tamga Vault
+**Tamga** is a modern, comprehensive digital vault and security management platform designed specifically for developers and privacy-conscious users. It features a robust **local-first** and **zero-knowledge** architecture.
 
-### 🏺 Why "Tamga"?
-The name **Tamga** comes from ancient Turkic culture and means a **seal or tribal mark** used to represent identity, ownership, and authority.
+> 🏺 **Why "Tamga"?** 
+> *Tamga* comes from ancient Turkic culture and means a **seal or tribal mark** used to represent identity, ownership, and authority. 
+> 
+> *Tamga = A digital seal. Your data is yours. Your control.* 🔐
 
-This name fits the application perfectly because it allows users to **seal and protect their digital identity and passwords locally**, under their own control.
-
-In short:
-> **Tamga = A digital seal.**
-> Your data is yours. Your control. 🔐
-## 🎯 Project Goal
-The primary goal of Tamga is to protect the user's most sensitive digital assets (passwords, 2FA codes, environment variables) without having to trust the cloud, keeping everything on their own device with military-grade encryption.
-
-## 🛠️ Key Features
-1.  **Password Management & Generator**: Create strong, complex passwords and store them in an encrypted history categorized by platform and username.
-2.  **Desktop OTP (TOTP) Management**: An alternative to mobile apps like Google Authenticator or Authy, generating 2FA codes directly on your desktop.
-    *   **Google Authenticator Migration**: Directly decode and import all your accounts from Google Authenticator export QR codes (`otpauth-migration://`) in one go.
-3.  **Secure .env Management**: Store sensitive `.env` files used in developer projects in an encrypted vault instead of leaving them as plain text on your machine.
-4.  **Backup Codes & Passkey Vault**: Securely store critical backup codes and passkey secrets provided by various services.
-5.  **Advanced Encryption**: All data is encrypted locally using **AES-GCM 256-bit** algorithms with keys derived from the user-defined "Master Password" via PBKDF2.
-
-## 💡 Problems Solved
-
-### 1. Cloud Security Concerns
-Many password managers store data in the cloud. A breach at the cloud provider could lead to your data being leaked. **Tamga** never sends your data to the internet; everything remains encrypted in your local database.
-
-### 2. Fragmented Security Tools
-Passwords, 2FA codes, and `.env` files are often scattered across different devices and locations. **Tamga** consolidates all these developer and security tools under one roof.
-
-### 3. Developer ".env" Security
-Developers often keep `.env` files containing sensitive API keys as plain text on their computers. These can be easily stolen by malware. **Tamga** eliminates this risk by keeping these files in an encrypted vault.
-
-### 4. Difficulty Migrating from Authenticator Apps
-Tamga features a built-in decoder for Google's proprietary export format, allowing you to move dozens of accounts from your phone to your desktop in seconds.
-
-## 💻 Technical Architecture
-- **Frontend**: React, Vite, Tailwind CSS, Lucide icons.
-- **Runtime**: Electron.
-- **Security**: Key derivation using PBKDF2 and encryption via AES-GCM using the Web Crypto API (SubtleCrypto).
-- **Storage**: Data is stored as encrypted JSON blocks in local storage (localStorage).
+## 🎯 The Core Mission
+The goal of Tamga is to protect your most sensitive digital assets (passwords, 2FA codes, passkeys, and API environment variables) without demanding blind trust in cloud servers. Everything is stored, managed, and encrypted exclusively on your own hardware using military-grade security standards.
 
 ---
 
-## 🚀 Running for Development
+## 🌟 Key Features
+
+### 🧩 1. The Ultimate Developer Vault
+- **Password Manager & Generator**: Create incredibly strong passwords and store them securely categorized by platform or username. Keeps historical track of your password modifications.
+- **Developer `.env` Storage**: Do not leave unencrypted `.env` files lying around your computer where malware can scrape them. Store them securely in Tamga.
+- **Desktop Authenticator (TOTP)**: Generate live 6-digit OTP codes right on your desktop.
+  - **Google Authenticator Importer**: Use your webcam or screenshots to decode Google's proprietary QR export (`otpauth-migration://`) and pull dozens of accounts into Tamga instantly!
+- **Passkeys & Recovery Codes**: Securely tuck away your backup rescue codes and raw digital passkeys in custom categories.
+
+### 🕸️ 2. Advanced Relational Linking
+- **Bi-Directional Credential Linking**: Connect multiple assets. Have a server password alongside an API `.env` file? Link them together!
+- **Interactive Security Hub**: Clicking on an item doesn't just show its details. It opens a unified Hub combining *all* linked files into a single, seamless vertical dashboard where you can copy passwords, read OTPs, and manage `.env` files all at once.
+- **Relational Graph View**: Tamga maps out your security architecture. Enter the **Graph View** to see a beautiful, interactive node-and-edge flowchart detailing how your credentials, groups, and files are interconnected.
+
+### 🎭 3. Intuitive Control UX
+- **Drag-and-Drop Organizations**: Drag items across your screen to seamlessly reorder your vaults.
+- **Shift-to-Merge Groups**: Hold the <kbd>Shift</kbd> key while dropping an item to nest them together into custom logical folders! Readjust, disband, and rename groups easily.
+- **Privacy Screen (Blur Mode)**: Sharing your screen on a Zoom call? Enable Tamga's *Blur Mode* to instantly shroud all your passwords and keys behind a frosted glass layer. They reveal themselves smoothly only when explicitly hovered over.
+
+---
+
+## 🔒 Security & Technical Architecture
+- **Zero-Knowledge Cloudless Model**: Tamga **never** sends your credentials to the internet. 
+- **Encryption**: Powered by standard, robust Web Crypto API `SubtleCrypto`.
+- **Algorithm**: Your global Master Password runs through extensive **PBKDF2** derivations to create an unlocking key. The actual vault files are encrypted via local **AES-GCM (256-bit)**. 
+- **Stack**: Built with React, Vite.js, completely standalone running locally on an Electron engine. UI crafted with Tailwind CSS and Radix components.
+
+---
+
+## 🚀 Installation & Development
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18 or later recommended)
 - npm
 
-### Setup
-
+### Quick Start
 ```bash
 # 1. Clone the repository
 git clone https://github.com/osmn-byhn/tamga.git
@@ -59,20 +59,18 @@ cd tamga
 # 2. Install dependencies
 npm install
 
-# 3. Start the app in development mode
-npm run dev
+# 3. Start the application
+npm run electron:dev
 ```
+*Note: Hot-reloading is fully enabled. Any changes made to the React frontend in `src/` will refresh instantly inside the Electron instance.*
 
-This starts the Vite dev server and launches Electron simultaneously. Hot-reloading is enabled — changes to the React frontend update instantly in the Electron window.
-
-### Build for Production
-
+### Packaging for Production
 ```bash
 npm run make
 ```
-
-Output distributables (`.zip`, `.rpm`, .`.deb`, etc.) will be placed in the [tamga-1.0.0-1](https://github.com/osmn-byhn/tamga/releases) directory.
+*Compiled output distributions (`.zip`, `.rpm`, `.deb`, `.AppImage`) will be seamlessly generated via Electron Forge.*
 
 ---
-
-*Tamga is a modern **digital seal** that gives you full ownership of your digital assets.*
+<div align="center">
+<i>Tamga is a modern digital seal that gives you complete sovereignty over your digital infrastructure.</i>
+</div>

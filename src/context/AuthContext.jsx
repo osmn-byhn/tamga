@@ -227,7 +227,90 @@ export function AuthProvider({ children }) {
         const stored = localStorage.getItem(storageKey);
         if (!stored) return null;
         return await decryptData(stored, encryptionKey);
-    }, [encryptionKey]);
+    }, [encryptionKey, decryptData]);
+
+    const getAllVaultItems = useCallback(async () => {
+        const keys = [
+            { key: 'tamga-passwords', type: 'password' },
+            { key: 'tamga-otp-uris', type: 'otp' },
+            { key: 'tamga-envs', type: 'env' },
+            { key: 'tamga-passkeys', type: 'passkey' },
+            { key: 'tamga-recovery-codes', type: 'recovery' }
+        ];
+        
+        const results = [];
+        for (const k of keys) {
+            const items = await getData(k.key) || [];
+            results.push(...items.map(i => ({ ...i, type: k.type })));
+        }
+        return results;
+    }, [getData]);
+
+    const toggleLink = useCallback(async (from, to) => {
+        if (!from || !to) return;
+        
+        const getSKey = (t) => {
+            switch(t) {
+                case 'password': return 'tamga-passwords';
+                case 'otp': return 'tamga-otp-uris';
+                case 'env': return 'tamga-envs';
+                case 'passkey': return 'tamga-passkeys';
+                case 'recovery': return 'tamga-recovery-codes';
+                default: return null;
+            }
+        };
+
+        const fromKey = getSKey(from.type);
+        const toKey = getSKey(to.type);
+        if (!fromKey || !toKey) return;
+
+        const fromItems = await getData(fromKey) || [];
+        const toItems = (fromKey === toKey) ? fromItems : (await getData(toKey) || []);
+
+        const updateItemInList = (list, targetId, linkToAdd) => {
+            return list.map(item => {
+                if (String(item.id) === String(targetId)) {
+                    const links = item.links || [];
+                    const exists = links.find(l => l.type === linkToAdd.type && String(l.id) === String(linkToAdd.id));
+                    if (exists) {
+                        return { ...item, links: links.filter(l => !(l.type === linkToAdd.type && String(l.id) === String(linkToAdd.id))) };
+                    } else {
+                        return { ...item, links: [...links, linkToAdd] };
+                    }
+                }
+                return item;
+            });
+        };
+
+        const newFromItems = updateItemInList(fromItems, from.id, { type: to.type, id: to.id });
+        await updateData(fromKey, newFromItems);
+
+        if (fromKey !== toKey || from.id !== to.id) {
+            const currentToItems = (fromKey === toKey) ? newFromItems : toItems;
+            const newToItems = updateItemInList(currentToItems, to.id, { type: from.type, id: from.id });
+            await updateData(toKey, newToItems);
+        }
+        
+        toast.success("Links updated");
+    }, [getData, updateData]);
+
+    const removeGlobalLink = useCallback(async (type, id) => {
+        const keys = ['tamga-passwords', 'tamga-otp-uris', 'tamga-envs', 'tamga-passkeys', 'tamga-recovery-codes'];
+        for (const key of keys) {
+            const items = await getData(key) || [];
+            let changed = false;
+            const updated = items.map(item => {
+                if (item.links?.some(l => l.type === type && String(l.id) === String(id))) {
+                    changed = true;
+                    return { ...item, links: item.links.filter(l => !(l.type === type && String(l.id) === String(id))) };
+                }
+                return item;
+            });
+            if (changed) {
+                await updateData(key, updated);
+            }
+        }
+    }, [getData, updateData]);
 
     // Export & Import
     const exportData = async () => {
@@ -236,7 +319,7 @@ export function AuthProvider({ children }) {
         const saltJson = localStorage.getItem("tamga-salt");
         if (!saltJson) return null;
 
-        const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs"];
+        const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs", "tamga-recovery-codes"];
         const exportObj = {
             version: 2, // Increment version
             timestamp: Date.now(),
@@ -396,6 +479,11 @@ export function AuthProvider({ children }) {
                             pk.label === item.label &&
                             pk.secret === item.secret
                         );
+                    } else if (key === "tamga-recovery-codes") {
+                        isDuplicate = localValue.some(rc =>
+                            rc.label === item.label &&
+                            rc.codes === item.codes
+                        );
                     }
 
                     if (isDuplicate) {
@@ -438,7 +526,10 @@ export function AuthProvider({ children }) {
             getData,
             updateData,
             exportData,
-            importData
+            importData,
+            getAllVaultItems,
+            toggleLink,
+            removeGlobalLink
         }}>
             {children}
         </AuthContext.Provider>

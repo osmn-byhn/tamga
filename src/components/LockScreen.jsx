@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock } from "lucide-react";
+import { Lock, KeyRound } from "lucide-react";
 
 const LockScreen = () => {
-    const { isLocked, unlock } = useAuth();
+    const { isLocked, hasPassword, unlock, setMasterPassword } = useAuth();
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState(false);
+    const [setupError, setSetupError] = useState("");
 
-    const handleSubmit = async (e) => {
+    const handleUnlock = async (e) => {
         e.preventDefault();
         const isValid = await unlock(password);
         if (!isValid) {
@@ -18,10 +20,70 @@ const LockScreen = () => {
         }
     };
 
+    const handleSetup = async (e) => {
+        e.preventDefault();
+        if (password.length < 8) {
+            setSetupError("Password must be at least 8 characters");
+            return;
+        }
+        if (password !== confirmPassword) {
+            setSetupError("Passwords do not match");
+            return;
+        }
+        await setMasterPassword(password);
+    };
+
+    if (!hasPassword) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background transition-all duration-500">
+                <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in duration-300">
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                        <div className="p-4 rounded-full bg-blue-500/20 text-blue-500">
+                            <KeyRound className="h-10 w-10" />
+                        </div>
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">Welcome to Tamga</h2>
+                        <p className="text-muted-foreground text-center">Set up your Master Password to create your secure zero-knowledge vault.</p>
+                    </div>
+
+                    <form onSubmit={handleSetup} className="space-y-6">
+                        <div className="space-y-4">
+                            <Input
+                                type="password"
+                                placeholder="Master Password (8+ chars)"
+                                value={password}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    setSetupError("");
+                                }}
+                                className="text-center text-lg h-12"
+                                autoFocus
+                            />
+                            <Input
+                                type="password"
+                                placeholder="Confirm Master Password"
+                                value={confirmPassword}
+                                onChange={(e) => {
+                                    setConfirmPassword(e.target.value);
+                                    setSetupError("");
+                                }}
+                                className={`text-center text-lg h-12 ${setupError ? 'border-red-500 ring-red-500/20' : ''}`}
+                            />
+                            {setupError && <p className="text-sm text-red-500 text-center animate-pulse">{setupError}</p>}
+                        </div>
+
+                        <Button type="submit" disabled={!password || !confirmPassword} className="w-full h-12 text-lg font-medium bg-blue-600 hover:bg-blue-700 text-white">
+                            Create Vault
+                        </Button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
     if (!isLocked) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm transition-all duration-500">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md transition-all duration-500">
             <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in duration-300">
                 <div className="flex flex-col items-center justify-center space-y-2">
                     <div className="p-4 rounded-full bg-purple-500/20 text-purple-500">
@@ -31,7 +93,7 @@ const LockScreen = () => {
                     <p className="text-muted-foreground text-center">Enter your master password to unlock Tamga</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleUnlock} className="space-y-6">
                     <div className="space-y-2">
                         <Input
                             type="password"
@@ -47,7 +109,7 @@ const LockScreen = () => {
                         {error && <p className="text-sm text-red-500 text-center animate-pulse">Incorrect password</p>}
                     </div>
 
-                    <Button type="submit" className="w-full h-12 text-lg font-medium bg-purple-600 hover:bg-purple-700 text-white">
+                    <Button type="submit" disabled={!password} className="w-full h-12 text-lg font-medium bg-purple-600 hover:bg-purple-700 text-white">
                         Unlock
                     </Button>
                 </form>

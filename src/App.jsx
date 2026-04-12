@@ -8,6 +8,9 @@ import OtpCodes from "./pages/OtpCodes";
 import Passkeys from "./pages/Passkeys";
 import Passwords from "./pages/Passwords";
 import Settings from "./pages/Settings";
+import ItemDetail from "./pages/ItemDetail";
+import GraphView from "./pages/GraphView";
+import RecoveryCodes from "./pages/RecoveryCodes";
 
 import { SettingsProvider } from "./context/SettingsContext";
 
@@ -24,7 +27,10 @@ function App() {
                 <Route path="env-files" element={<Envs />} />
                 <Route path="otps" element={<OtpCodes />} />
                 <Route path="backup-codes" element={<Passkeys />} />
+                <Route path="recovery-codes" element={<RecoveryCodes />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="details/:type/:id" element={<ItemDetail />} />
+                <Route path="connections" element={<GraphView />} />
               </Route>
             </Routes>
           </HashRouter>
