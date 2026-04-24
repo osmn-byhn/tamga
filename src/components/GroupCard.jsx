@@ -15,14 +15,19 @@ const GroupCard = ({
     isGroupingTarget 
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const groupColor = group.color || "#3b82f6";
 
     return (
         <div className="w-full space-y-4">
             <Card className={cn(
-                "relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-card border-border",
-                isExpanded && "ring-2 ring-blue-500/20 shadow-md",
+                "relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 bg-card border-border",
+                isExpanded && "shadow-md",
                 isGroupingTarget && "ring-4 ring-primary shadow-2xl scale-[1.02] z-20 brightness-110"
-            )}>
+            )} style={{ 
+                borderLeftColor: groupColor,
+                boxShadow: isExpanded ? `0 4px 12px ${groupColor}20` : undefined,
+                ringColor: isExpanded ? `${groupColor}33` : undefined
+            }}>
                 <CardContent className="p-5">
                     <div 
                         {...dragHandleProps} 
@@ -37,7 +42,8 @@ const GroupCard = ({
                             className="flex-1 flex items-center gap-4 cursor-pointer"
                             onClick={() => setIsExpanded(!isExpanded)}
                         >
-                            <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 shadow-inner group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform"
+                                style={{ backgroundColor: `${groupColor}1a`, color: groupColor }}>
                                 {isExpanded ? <FolderOpen className="h-6 w-6" /> : <Folder className="h-6 w-6" />}
                             </div>
                             <div className="min-w-0">
@@ -58,7 +64,7 @@ const GroupCard = ({
                                 size="icon"
                                 variant="ghost"
                                 className="text-muted-foreground hover:text-foreground"
-                                onClick={() => onRename(group.id, group.name)}
+                                onClick={() => onRename(group.id, group.name, groupColor)}
                                 title="Rename Group"
                             >
                                 <Pencil className="h-4 w-4" />
@@ -83,12 +89,13 @@ const GroupCard = ({
                                 className="text-muted-foreground hover:text-foreground"
                                 onClick={() => setIsExpanded(!isExpanded)}
                             >
-                                {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                                {isExpanded ? <ChevronDown className="h-5 w-5" style={{ color: groupColor }} /> : <ChevronRight className="h-5 w-5" style={{ color: groupColor }} />}
                             </Button>
                         </div>
                     </div>
                 </CardContent>
             </Card>
+
 
             {isExpanded && (
                 <div className="pl-6 space-y-4 border-l-2 border-dashed border-border ml-6 pb-2 animate-in slide-in-from-top-2 duration-300">
