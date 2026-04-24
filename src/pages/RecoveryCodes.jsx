@@ -328,8 +328,8 @@ const RecoveryCodes = () => {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => {
-            if (renameGroupData?.isJustCreated) {
+          onClose={(isConfirmed) => {
+            if (renameGroupData?.isJustCreated && !isConfirmed) {
               onUngroup(renameGroupData.id);
             }
             setRenameGroupData(null);
