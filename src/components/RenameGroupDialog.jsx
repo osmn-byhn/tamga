@@ -16,12 +16,12 @@ const RenameGroupDialog = ({ isOpen, onClose, onConfirm, initialName = "" }) => 
   const handleConfirm = () => {
     if (name.trim()) {
       onConfirm(name.trim());
-      onClose();
+      onClose(true);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose(false)}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Name Your Group</DialogTitle>
@@ -43,9 +43,10 @@ const RenameGroupDialog = ({ isOpen, onClose, onConfirm, initialName = "" }) => 
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button variant="outline" onClick={() => onClose(false)}>Cancel</Button>
           <Button onClick={handleConfirm}>Save</Button>
         </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
