@@ -255,9 +255,9 @@ const OtpCodes = () => {
     }
   };
 
-  const onRenameGroup = (id, newName) => {
+  const onRenameGroup = (id, newName, newColor) => {
     const updated = otpUris.map(i => {
-      if (i.id === id) return { ...i, name: newName };
+      if (i.id === id) return { ...i, name: newName, color: newColor };
       return i;
     });
     saveOtps(updated);
@@ -353,7 +353,7 @@ const OtpCodes = () => {
                         <GroupCard 
                             group={item} 
                             onDelete={onDeleteGroup}
-                            onRename={(id, name) => setRenameGroupData({ id, name })}
+                            onRename={(id, name, color) => setRenameGroupData({ id, name, color })}
                             onUngroup={onUngroup}
                             isGroupingTarget={combineTargetId === item.id}
                         >
@@ -396,7 +396,8 @@ const OtpCodes = () => {
             setRenameGroupData(null);
           }}
           initialName={renameGroupData.name}
-          onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
+          initialColor={renameGroupData.color}
+          onConfirm={(newName, newColor) => onRenameGroup(renameGroupData.id, newName, newColor)}
         />
       )}
     </div>
