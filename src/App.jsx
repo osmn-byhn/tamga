@@ -11,6 +11,7 @@ import Settings from "./pages/Settings";
 import ItemDetail from "./pages/ItemDetail";
 import GraphView from "./pages/GraphView";
 import RecoveryCodes from "./pages/RecoveryCodes";
+import TitleBar from "./components/TitleBar";
 
 import { SettingsProvider } from "./context/SettingsContext";
 
@@ -21,6 +22,7 @@ function App() {
         <AuthProvider>
           <LockScreen />
           <HashRouter>
+            <TitleBar />
             <Routes>
               <Route path="/" element={<RootLayout />}>
                 <Route index element={<Passwords />} />

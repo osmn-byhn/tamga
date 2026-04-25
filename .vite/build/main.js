@@ -190,6 +190,7 @@ async function createWindow() {
 		height: 800,
 		icon: d,
 		autoHideMenuBar: !0,
+		titleBarStyle: "hidden",
 		webPreferences: {
 			preload,
 			nodeIntegration: !1,
@@ -237,6 +238,12 @@ app.whenReady().then(() => {
 				error: e.message
 			};
 		}
+	}), ipcMain.on("window-minimize", () => {
+		win?.minimize();
+	}), ipcMain.on("window-maximize", () => {
+		win?.isMaximized() ? win.unmaximize() : win?.maximize();
+	}), ipcMain.on("window-close", () => {
+		win?.close();
 	});
 }), app.on("window-all-closed", () => {
 	win = null, process.platform !== "darwin" && app.quit();
