@@ -429,11 +429,10 @@ export default function Passwords() {
                     <Button
                       variant="ghost"
                       className="text-muted-foreground hover:text-foreground h-12 w-12"
-                      onClick={() => savePasswordToHistory(password)}
-                      disabled={!password}
-                      title="Save to History"
+                      onClick={generatePassword}
+                      title="Regenerate Password"
                     >
-                      <Save size={28} />
+                      <RefreshCw size={24} />
                     </Button>
                     <Button
                       variant="ghost"
@@ -505,11 +504,12 @@ export default function Passwords() {
 
                 <Button
                   size="lg"
-                  className="w-full gap-2 text-lg h-12"
-                  onClick={generatePassword}
+                  className="w-full gap-2 text-lg h-12 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300"
+                  onClick={() => savePasswordToHistory(password)}
+                  disabled={!password}
                 >
-                  <RefreshCw className="h-5 w-5" />
-                  Regenerate
+                  <Save className="h-5 w-5" />
+                  Save Password
                 </Button>
               </CardContent>
             </Card>
