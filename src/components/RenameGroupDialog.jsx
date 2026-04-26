@@ -34,7 +34,7 @@ const RenameGroupDialog = ({ isOpen, onClose, onConfirm, initialName = "", initi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose(false)}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Name Your Group</DialogTitle>
         </DialogHeader>

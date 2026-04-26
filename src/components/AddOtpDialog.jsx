@@ -19,10 +19,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import jsQR from "jsqr";
 import * as OTPAuth from "otpauth";
+import { Globe, ExternalLink } from "lucide-react";
 
 const AddOtpDialog = ({ onAdd, children }) => {
     const [open, setOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("manual");
+    const [url, setUrl] = useState("");
 
     // Manual Entry State
     const [manualIssuer, setManualIssuer] = useState("");
@@ -54,7 +56,7 @@ const AddOtpDialog = ({ onAdd, children }) => {
             secret: OTPAuth.Secret.fromBase32(manualSecret),
         }).toString();
 
-        onAdd(uri);
+        onAdd(uri, url.trim());
         setOpen(false);
         resetForm();
         toast.success("OTP added successfully");
@@ -64,6 +66,7 @@ const AddOtpDialog = ({ onAdd, children }) => {
         setManualIssuer("");
         setManualLabel("");
         setManualSecret("");
+        setUrl("");
     };
 
     // Image Upload Logic
@@ -96,7 +99,7 @@ const AddOtpDialog = ({ onAdd, children }) => {
                                 throw new Error("No accounts found in migration data");
                             }
 
-                            uris.forEach(uri => onAdd(uri));
+                            uris.forEach(uri => onAdd(uri, url.trim()));
                             setOpen(false);
                             toast.success(`Imported ${uris.length} accounts from Google Authenticator`);
                             return;
@@ -113,7 +116,7 @@ const AddOtpDialog = ({ onAdd, children }) => {
                         }
 
                         OTPAuth.URI.parse(finalUri);
-                        onAdd(finalUri);
+                        onAdd(finalUri, url.trim());
                         setOpen(false);
                         toast.success("QR Code loaded successfully");
                     } catch (e) {
@@ -177,24 +180,55 @@ const AddOtpDialog = ({ onAdd, children }) => {
                                 onChange={(e) => setManualSecret(e.target.value)}
                             />
                         </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="manual-url">URL / Domain (Optional)</Label>
+                            <div className="relative">
+                                <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    id="manual-url"
+                                    placeholder="https://google.com"
+                                    value={url}
+                                    onChange={(e) => setUrl(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+                        </div>
+
                         <Button onClick={handleManualSubmit} className="w-full">
                             Add Account
                         </Button>
                     </TabsContent>
 
                     <TabsContent value="upload" className="space-y-4 py-4">
-                        <div className="flex flex-col items-center justify-center space-y-4 p-8 border-2 border-dashed border-border rounded-md hover:bg-muted/50 transition-colors">
-                            <Label htmlFor="qr-file" className="cursor-pointer flex flex-col items-center gap-2">
-                                <span className="text-4xl">📁</span>
-                                <span className="text-sm font-medium text-foreground">Click to upload QR Image</span>
-                            </Label>
-                            <Input
-                                id="qr-file"
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={handleFileUpload}
-                            />
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="upload-url">URL / Domain (Optional)</Label>
+                                <div className="relative">
+                                    <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        id="upload-url"
+                                        placeholder="https://google.com"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        className="pl-10"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center justify-center space-y-4 p-8 border-2 border-dashed border-border rounded-md hover:bg-muted/50 transition-colors">
+                                <Label htmlFor="qr-file" className="cursor-pointer flex flex-col items-center gap-2">
+                                    <span className="text-4xl">📁</span>
+                                    <span className="text-sm font-medium text-foreground">Click to upload QR Image</span>
+                                </Label>
+                                <Input
+                                    id="qr-file"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleFileUpload}
+                                />
+                            </div>
                         </div>
                     </TabsContent>
                 </Tabs>

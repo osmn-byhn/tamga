@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Terminal, Trash2, FileJson, Pencil, ExternalLink, GripVertical } from "lucide-react";
+import { Copy, Eye, EyeOff, Terminal, Trash2, FileJson, Pencil, ExternalLink, GripVertical, Globe } from "lucide-react";
 import EditEnvDialog from "./EditEnvDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, getFaviconUrl } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 import {
     Dialog,
@@ -49,8 +49,12 @@ const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
-                                <div className="p-2 rounded-full bg-green-500/10 text-green-500">
-                                    <Terminal className="h-4 w-4" />
+                                <div className="p-2 rounded-full bg-green-500/10 text-green-500 overflow-hidden">
+                                    {envItem.url ? (
+                                        <img src={getFaviconUrl(envItem.url)} alt="" className="h-4 w-4 object-contain" />
+                                    ) : (
+                                        <Terminal className="h-4 w-4" />
+                                    )}
                                 </div>
                                 <h3 className="text-lg font-bold truncate text-foreground" title={projectName}>
                                     {projectName}
@@ -83,6 +87,17 @@ const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                                         <ExternalLink className="h-4 w-4" />
                                     </Button>
                                 </Link>
+                            )}
+                            {envItem.url && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    onClick={() => window.open(envItem.url, '_blank')}
+                                    title="Open Website"
+                                >
+                                    <Globe size={14} />
+                                </Button>
                             )}
                             <Button
                                 variant="ghost"

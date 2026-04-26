@@ -12,13 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, ExternalLink } from "lucide-react";
 import LinkSelector from "./LinkSelector";
 
 const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
     const [label, setLabel] = useState(passkey.label || "");
     const [secret, setSecret] = useState(passkey.secret || "");
+    const [url, setUrl] = useState(passkey.url || "");
     const [links, setLinks] = useState(passkey.links || []);
 
     const handleSubmit = (e) => {
@@ -31,6 +32,7 @@ const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
         onUpdate(passkey.id, {
             label: label.trim(),
             secret: secret.trim(),
+            url: url.trim(),
             links: links
         });
 
@@ -55,7 +57,7 @@ const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit Passkey</DialogTitle>
                     <DialogDescription>
@@ -71,6 +73,19 @@ const EditPasskeyDialog = ({ passkey, onUpdate, children }) => {
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-pk-url">URL / Domain (Optional)</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="edit-pk-url"
+                                placeholder="https://github.com"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">

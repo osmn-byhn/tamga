@@ -68,11 +68,12 @@ const Passkeys = () => {
     await updateData("tamga-passkeys", newPasskeys);
   };
 
-  const handleAddPasskey = async ({ label, secret }) => {
+  const handleAddPasskey = async ({ label, secret, url = "" }) => {
     const newPasskey = {
       id: Date.now(),
       label,
       secret,
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -94,7 +95,7 @@ const Passkeys = () => {
 
     // 1. Update the item itself
     const updated = passkeys.map(pk =>
-      pk.id === id ? { ...pk, ...updatedData } : pk
+      pk.id === id ? { ...pk, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : pk.url || "").trim() } : pk
     );
     await savePasskeys(updated);
 

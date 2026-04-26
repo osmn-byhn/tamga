@@ -490,7 +490,7 @@ const Settings = () => {
 
         {/* Import/Restore Password Dialog */}
         <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Shield className="h-6 w-6 text-purple-600" />
@@ -586,7 +586,7 @@ const Settings = () => {
 
         {/* About App Dialog */}
         <Dialog open={showAboutDialog} onOpenChange={setShowAboutDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Info className="h-6 w-6 text-purple-600" />

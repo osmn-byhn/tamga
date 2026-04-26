@@ -12,13 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import LinkSelector from "./LinkSelector";
-import { Globe, User, Shield } from "lucide-react";
+import { Globe, User, Shield, ExternalLink } from "lucide-react";
 
 const EditPasswordDialog = ({ passwordItem, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
     const [platform, setPlatform] = useState(passwordItem.platform || "");
     const [username, setUsername] = useState(passwordItem.username || "");
     const [value, setValue] = useState(passwordItem.value || "");
+    const [url, setUrl] = useState(passwordItem.url || "");
     const [links, setLinks] = useState(passwordItem.links || []);
 
     const handleSubmit = (e) => {
@@ -32,6 +33,7 @@ const EditPasswordDialog = ({ passwordItem, onUpdate, children }) => {
             platform: platform.trim(),
             username: username.trim(),
             value: value.trim(),
+            url: url.trim(),
             links: links
         });
 
@@ -44,7 +46,7 @@ const EditPasswordDialog = ({ passwordItem, onUpdate, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit Password</DialogTitle>
                     <DialogDescription>
@@ -88,6 +90,20 @@ const EditPasswordDialog = ({ passwordItem, onUpdate, children }) => {
                                 onChange={(e) => setValue(e.target.value)}
                                 placeholder="Password"
                                 className="pl-10 font-mono"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-pass-url">URL / Domain</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="edit-pass-url"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                placeholder="https://example.com"
+                                className="pl-10"
                             />
                         </div>
                     </div>
