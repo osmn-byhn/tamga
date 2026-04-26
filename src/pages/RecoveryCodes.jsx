@@ -68,11 +68,12 @@ const RecoveryCodes = () => {
     await updateData("tamga-recovery-codes", newItems);
   };
 
-  const handleAdd = async ({ label, codes }) => {
+  const handleAdd = async ({ label, codes, url = "" }) => {
     const newItem = {
       id: Date.now(),
       label,
       codes,
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -89,7 +90,7 @@ const RecoveryCodes = () => {
 
   const handleUpdate = async (id, updatedData) => {
     const updated = recoveryCodes.map(i =>
-      i.id === id ? { ...i, ...updatedData } : i
+      i.id === id ? { ...i, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : i.url || "").trim() } : i
     );
     await saveRecoveryCodes(updated);
     toast.success("Item updated");

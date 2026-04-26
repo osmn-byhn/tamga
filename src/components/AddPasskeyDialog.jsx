@@ -12,12 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, ExternalLink } from "lucide-react";
 
 const AddPasskeyDialog = ({ onAdd, children }) => {
     const [open, setOpen] = useState(false);
     const [label, setLabel] = useState("");
     const [secret, setSecret] = useState("");
+    const [url, setUrl] = useState("");
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -29,11 +30,13 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
         onAdd({
             label: label.trim(),
             secret: secret.trim(),
+            url: url.trim(),
         });
 
         setOpen(false);
         setLabel("");
         setSecret("");
+        setUrl("");
         toast.success("Passkey added successfully");
     };
 
@@ -54,7 +57,7 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Passkey</DialogTitle>
                     <DialogDescription>
@@ -70,6 +73,19 @@ const AddPasskeyDialog = ({ onAdd, children }) => {
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="pk-url">URL / Domain (Optional)</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="pk-url"
+                                placeholder="https://github.com"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">

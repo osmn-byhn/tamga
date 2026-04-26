@@ -80,7 +80,7 @@ const OtpCodes = () => {
     await updateData("tamga-otp-uris", uris);
   };
 
-  const handleAddOtp = async (uri) => {
+  const handleAddOtp = async (uri, url = "") => {
     if (otpUris.some(o => o.uri === uri)) {
       toast.error("This OTP account already exists");
       return;
@@ -88,6 +88,7 @@ const OtpCodes = () => {
     const newItem = {
       id: Date.now() + Math.random(),
       uri,
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -109,7 +110,7 @@ const OtpCodes = () => {
 
     // 1. Update the item itself
     const updated = otpUris.map(o =>
-      o.id === id ? { ...o, ...updatedData } : o
+      o.id === id ? { ...o, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : o.url || "").trim() } : o
     );
     await saveOtps(updated);
 
@@ -284,7 +285,7 @@ const OtpCodes = () => {
         if (g.id === groupId) {
             return {
                 ...g,
-                items: g.items.map(item => item.id === itemId ? { ...item, ...updatedData } : item)
+                items: g.items.map(item => item.id === itemId ? { ...item, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : item.url || "").trim() } : item)
             };
         }
         return g;
