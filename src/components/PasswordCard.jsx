@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import EditPasswordDialog from "./EditPasswordDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { useSettings } from "@/context/SettingsContext";
+import CensoredText from "./CensoredText";
 
 const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTarget, showDetailLink = true }) => {
   const { hideSensitiveData } = useSettings();
@@ -44,11 +45,8 @@ const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTar
                     </span>
                     )}
                 </div>
-                <div className={cn(
-                    "font-mono break-all text-lg transition-all duration-300",
-                    (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
-                )}>
-                    {item.value}
+                <div className="font-mono break-all text-lg transition-all duration-300">
+                    <CensoredText value={item.value} isVisible={isVisible} />
                 </div>
             </div>
         </div>

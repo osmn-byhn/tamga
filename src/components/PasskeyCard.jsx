@@ -8,9 +8,10 @@ import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import CensoredText from "./CensoredText";
 
 const PasskeyCard = ({ passkey, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
-    const { hideSensitiveData } = useSettings();
+    const { hideSensitiveData, maskStyle } = useSettings();
     const [isVisible, setIsVisible] = useState(false);
 
     const copyToClipboard = () => {
@@ -43,10 +44,8 @@ const PasskeyCard = ({ passkey, onDelete, onUpdate, dragHandleProps, isGroupingT
                         </div>
 
                         <div className="relative mt-3 p-3 bg-muted rounded-md font-mono text-sm break-all group-hover:bg-muted/80 transition-colors">
-                            <div className={cn("transition-all duration-300", (hideSensitiveData && !isVisible) ? "blur-[6px] select-none text-muted-foreground" : "blur-0")}>
-                                {passkey.secret}
-                            </div>
-                            {(hideSensitiveData && !isVisible) && (
+                            <CensoredText value={passkey.secret} isVisible={isVisible} />
+                            {(hideSensitiveData && !isVisible && maskStyle === 'blur') && (
                                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs font-sans pointer-events-none">
                                     Tap eye to reveal
                                 </div>

@@ -8,9 +8,10 @@ import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import CensoredText from "./CensoredText";
 
 const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
-    const { hideSensitiveData } = useSettings();
+    const { hideSensitiveData, maskStyle } = useSettings();
     const [isVisible, setIsVisible] = useState(false);
 
     const copyToClipboard = () => {
@@ -42,10 +43,10 @@ const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGro
                         </div>
 
                         <div className="relative mt-3 p-3 bg-muted rounded-md font-mono text-[10px] leading-tight group-hover:bg-muted/80 transition-colors max-h-[120px] overflow-hidden">
-                            <div className={cn("transition-all duration-300 whitespace-pre-wrap", (hideSensitiveData && !isVisible) ? "blur-[8px] select-none text-muted-foreground" : "blur-0")}>
-                                {recovery.codes}
+                            <div className="whitespace-pre-wrap">
+                                <CensoredText value={recovery.codes} isVisible={isVisible} />
                             </div>
-                            {(hideSensitiveData && !isVisible) && (
+                            {(hideSensitiveData && !isVisible && maskStyle === 'blur') && (
                                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-xs font-sans pointer-events-none">
                                     Tap eye to reveal
                                 </div>
