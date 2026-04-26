@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import CensoredText from "./CensoredText";
 import {
     Dialog,
     DialogContent,
@@ -60,11 +61,8 @@ const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                                 className="mt-3 p-3 bg-muted rounded-md font-mono text-xs text-muted-foreground overflow-hidden cursor-pointer hover:bg-muted/80 transition-all duration-300 border border-border"
                                 onClick={() => setShowFull(true)}
                             >
-                                <pre className={cn(
-                                    "whitespace-pre-wrap break-all transition-all duration-300",
-                                    (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
-                                )}>
-                                    {previewContent}
+                                <pre className="whitespace-pre-wrap break-all transition-all duration-300">
+                                    <CensoredText value={previewContent} isVisible={isVisible} />
                                 </pre>
                             </div>
 
@@ -140,11 +138,8 @@ const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                         </DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto bg-muted p-4 rounded-md border border-border mt-2">
-                        <pre className={cn(
-                            "font-mono text-sm text-foreground whitespace-pre-wrap transition-all duration-300",
-                            (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
-                        )}>
-                            {content}
+                        <pre className="font-mono text-sm text-foreground whitespace-pre-wrap transition-all duration-300">
+                            <CensoredText value={content} isVisible={isVisible} />
                         </pre>
                     </div>
                     <div className="flex justify-end pt-2">

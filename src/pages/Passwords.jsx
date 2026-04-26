@@ -34,7 +34,7 @@ import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 
 export default function Passwords() {
   const { getData, updateData } = useAuth();
-  const { hideSensitiveData } = useSettings();
+  const { hideSensitiveData, maskStyle } = useSettings();
   const [passwords, setPasswords] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -411,10 +411,10 @@ export default function Passwords() {
                       setPassword(e.target.value);
                       setCopied(false);
                     }}
-                    type={(!showMainPassword && hideSensitiveData) ? "password" : "text"}
+                    type={(!showMainPassword && hideSensitiveData && maskStyle !== 'blur') ? "password" : "text"}
                     className={cn(
                       "bg-muted h-20 rounded-lg font-mono text-2xl text-center break-all pr-32 border-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300",
-                      (!showMainPassword && hideSensitiveData) ? "blur-md" : "blur-0"
+                      (!showMainPassword && hideSensitiveData && maskStyle === 'blur') ? "blur-md" : "blur-0"
                     )}
                   />
                   <div className="absolute top-4 right-4 flex items-center gap-2">

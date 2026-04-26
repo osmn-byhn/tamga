@@ -8,6 +8,7 @@ import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { cn } from "@/lib/utils";
+import CensoredText from "./CensoredText";
 import { toast } from "sonner";
 import * as OTPAuth from "otpauth";
 
@@ -81,13 +82,10 @@ const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                         {totp.label.includes(":") ? totp.label.split(":")[1].trim() : totp.label}
                     </h3>
                     <div
-                        className={cn(
-                            "text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-all duration-300 mt-1",
-                            (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
-                        )}
+                        className="text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-all duration-300 mt-1"
                         onClick={copyToClipboard}
                     >
-                        {code.slice(0, 3)} {code.slice(3)}
+                        <CensoredText value={`${code.slice(0, 3)} ${code.slice(3)}`} isVisible={isVisible} />
                     </div>
                 </div>
 
