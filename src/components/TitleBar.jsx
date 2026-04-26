@@ -47,7 +47,7 @@ const TitleBar = () => {
       {/* Left Side: Logo and Title */}
       <div className="flex items-center gap-3 px-4 h-full">
         <div className="w-6 h-6 flex items-center justify-center bg-primary rounded-md shadow-lg shadow-primary/20">
-          <img src="/tamga.png" alt="Tamga" />
+          <img src="./tamga.png" alt="Tamga" />
         </div>
         <span className="text-sm font-semibold tracking-tight text-foreground/80">Tamga</span>
       </div>

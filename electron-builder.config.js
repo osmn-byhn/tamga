@@ -17,7 +17,7 @@ export default {
   ],
 
   linux: {
-    target: ["AppImage", "deb", "rpm", "zip"],
+    target: ["AppImage", "deb", "zip"],
     category: "Security",
     executableName: "tamga",
     icon: "public/tamga.png",
