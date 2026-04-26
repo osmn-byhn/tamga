@@ -12,12 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Edit2, Upload } from "lucide-react";
+import { Edit2, Upload, ExternalLink } from "lucide-react";
 
 const EditRecoveryCodeDialog = ({ recovery, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
     const [label, setLabel] = useState(recovery.label || "");
     const [codes, setCodes] = useState(recovery.codes || "");
+    const [url, setUrl] = useState(recovery.url || "");
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -30,6 +31,7 @@ const EditRecoveryCodeDialog = ({ recovery, onUpdate, children }) => {
             ...recovery,
             label: label.trim(),
             codes: codes.trim(),
+            url: url.trim(),
         });
 
         setOpen(false);
@@ -52,7 +54,7 @@ const EditRecoveryCodeDialog = ({ recovery, onUpdate, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit Recovery Codes</DialogTitle>
                     <DialogDescription>
@@ -67,6 +69,19 @@ const EditRecoveryCodeDialog = ({ recovery, onUpdate, children }) => {
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-rc-url">URL / Domain (Optional)</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="edit-rc-url"
+                                placeholder="https://google.com"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">

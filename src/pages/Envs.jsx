@@ -67,11 +67,12 @@ const Envs = () => {
     await updateData("tamga-envs", newItems);
   };
 
-  const handleAddEnv = async ({ projectName, content }) => {
+  const handleAddEnv = async ({ projectName, content, url = "" }) => {
     const newItem = {
       id: Date.now(),
       projectName,
       content,
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -93,7 +94,7 @@ const Envs = () => {
 
     // 1. Update the item itself
     const updated = envItems.map(item =>
-      item.id === id ? { ...item, ...updatedData } : item
+      item.id === id ? { ...item, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : item.url || "").trim() } : item
     );
     await saveEnvs(updated);
 

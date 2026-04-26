@@ -12,13 +12,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
+import { Upload, ExternalLink } from "lucide-react";
 import LinkSelector from "./LinkSelector";
 
 const EditEnvDialog = ({ envItem, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
     const [projectName, setProjectName] = useState(envItem.projectName?.projectName || envItem.projectName || "");
     const [content, setContent] = useState(envItem.content || "");
+    const [url, setUrl] = useState(envItem.url || "");
     const [links, setLinks] = useState(envItem.links || []);
 
     const handleSubmit = (e) => {
@@ -31,6 +32,7 @@ const EditEnvDialog = ({ envItem, onUpdate, children }) => {
         onUpdate(envItem.id, {
             projectName: projectName.trim(),
             content: content.trim(),
+            url: url.trim(),
             links: links
         });
 
@@ -55,7 +57,7 @@ const EditEnvDialog = ({ envItem, onUpdate, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit .env File</DialogTitle>
                     <DialogDescription>
@@ -72,6 +74,20 @@ const EditEnvDialog = ({ envItem, onUpdate, children }) => {
                             value={projectName}
                             onChange={(e) => setProjectName(e.target.value)}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-env-url">URL / Repository (Optional)</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="edit-env-url"
+                                placeholder="https://github.com/user/repo"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">

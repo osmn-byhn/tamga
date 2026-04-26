@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Trash2, ShieldAlert, Pencil, ExternalLink, GripVertical } from "lucide-react";
+import { Copy, Eye, EyeOff, Trash2, ShieldAlert, Pencil, ExternalLink, GripVertical, Globe } from "lucide-react";
 import EditRecoveryCodeDialog from "./EditRecoveryCodeDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, getFaviconUrl } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 
 const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
@@ -34,8 +34,12 @@ const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGro
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 rounded-full bg-rose-500/10 text-rose-500">
-                                <ShieldAlert className="h-4 w-4" />
+                            <div className="p-2 rounded-full bg-rose-500/10 text-rose-500 overflow-hidden">
+                                {recovery.url ? (
+                                    <img src={getFaviconUrl(recovery.url)} alt="" className="h-4 w-4 object-contain" />
+                                ) : (
+                                    <ShieldAlert className="h-4 w-4" />
+                                )}
                             </div>
                             <h3 className="text-lg font-bold truncate text-foreground">
                                 {recovery.label}
@@ -69,6 +73,17 @@ const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGro
                                     <ExternalLink className="h-4 w-4" />
                                 </Button>
                             </Link>
+                        )}
+                        {recovery.url && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={() => window.open(recovery.url, '_blank')}
+                                title="Open Website"
+                            >
+                                <Globe size={14} />
+                            </Button>
                         )}
                         <EditRecoveryCodeDialog recovery={recovery} onUpdate={onUpdate}>
                             <Button
