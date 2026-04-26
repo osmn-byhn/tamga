@@ -598,7 +598,7 @@ const Settings = () => {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="flex flex-col items-center justify-center space-y-2 text-center border border-gray-100 dark:border-gray-800 p-6 rounded-lg bg-gray-50/50 dark:bg-gray-900/50">
-                <img src="/tamga.png" alt="Tamga Logo" className="w-16 h-16 object-contain mb-2 drop-shadow-md" />
+                <img src="./tamga.png" alt="Tamga Logo" className="w-16 h-16 object-contain mb-2 drop-shadow-md" />
                 <h3 className="text-xl font-bold tracking-tight">Tamga</h3>
                 <div className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-semibold">
                   Version {pkg.version}
