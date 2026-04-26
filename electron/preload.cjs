@@ -1,3 +1,4 @@
+console.log("[Preload] Script starting...");
 const { contextBridge, ipcRenderer } = require('electron')
 
 // --------- Expose some API to the Renderer process ---------
