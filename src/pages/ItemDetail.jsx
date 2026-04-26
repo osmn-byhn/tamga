@@ -170,7 +170,7 @@ const ItemDetail = () => {
                             Manage Connections
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle className="text-2xl font-bold">Connect Insights</DialogTitle>
                             <DialogDescription>

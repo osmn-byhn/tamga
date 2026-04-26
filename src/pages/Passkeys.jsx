@@ -68,11 +68,12 @@ const Passkeys = () => {
     await updateData("tamga-passkeys", newPasskeys);
   };
 
-  const handleAddPasskey = async ({ label, secret }) => {
+  const handleAddPasskey = async ({ label, secret, url = "" }) => {
     const newPasskey = {
       id: Date.now(),
       label,
       secret,
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -94,7 +95,7 @@ const Passkeys = () => {
 
     // 1. Update the item itself
     const updated = passkeys.map(pk =>
-      pk.id === id ? { ...pk, ...updatedData } : pk
+      pk.id === id ? { ...pk, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : pk.url || "").trim() } : pk
     );
     await savePasskeys(updated);
 
@@ -232,9 +233,9 @@ const Passkeys = () => {
     }
   };
 
-  const onRenameGroup = (id, newName) => {
+  const onRenameGroup = (id, newName, newColor) => {
     const updated = passkeys.map(i => {
-      if (i.id === id) return { ...i, name: newName };
+      if (i.id === id) return { ...i, name: newName, color: newColor };
       return i;
     });
     savePasskeys(updated);
@@ -333,7 +334,7 @@ const Passkeys = () => {
                         <GroupCard 
                             group={item} 
                             onDelete={onDeleteGroup}
-                            onRename={(id, name) => setRenameGroupData({ id, name })}
+                            onRename={(id, name, color) => setRenameGroupData({ id, name, color })}
                             onUngroup={onUngroup}
                             isGroupingTarget={combineTargetId === item.id}
                         >
@@ -369,14 +370,15 @@ const Passkeys = () => {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => {
-            if (renameGroupData?.isJustCreated) {
+          onClose={(isConfirmed) => {
+            if (renameGroupData?.isJustCreated && !isConfirmed) {
               onUngroup(renameGroupData.id);
             }
             setRenameGroupData(null);
           }}
           initialName={renameGroupData.name}
-          onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
+          initialColor={renameGroupData.color}
+          onConfirm={(newName, newColor) => onRenameGroup(renameGroupData.id, newName, newColor)}
         />
       )}
     </div>

@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Pencil, Copy, Trash2, ExternalLink, GripVertical, Shield } from "lucide-react";
+import { Eye, EyeOff, Pencil, Copy, Trash2, ExternalLink, GripVertical, Shield, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn, getFaviconUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import EditPasswordDialog from "./EditPasswordDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { useSettings } from "@/context/SettingsContext";
+import CensoredText from "./CensoredText";
 
 const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTarget, showDetailLink = true }) => {
   const { hideSensitiveData } = useSettings();
@@ -28,8 +29,12 @@ const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTar
       </div>
       <div className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-lg border border-border bg-card hover:bg-muted/30 gap-4 transition-all duration-200">
         <div className="flex items-center gap-4 flex-1">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 shrink-0">
-                <Shield className="h-5 w-5" />
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 shrink-0 overflow-hidden">
+                {item.url ? (
+                    <img src={getFaviconUrl(item.url)} alt="" className="h-5 w-5 object-contain" />
+                ) : (
+                    <Shield className="h-5 w-5" />
+                )}
             </div>
             <div className="space-y-1 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -44,11 +49,8 @@ const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTar
                     </span>
                     )}
                 </div>
-                <div className={cn(
-                    "font-mono break-all text-lg transition-all duration-300",
-                    (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
-                )}>
-                    {item.value}
+                <div className="font-mono break-all text-lg transition-all duration-300">
+                    <CensoredText value={item.value} isVisible={isVisible} />
                 </div>
             </div>
         </div>
@@ -65,6 +67,17 @@ const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTar
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </Link>
+          )}
+          {item.url && (
+            <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => window.open(item.url, '_blank')}
+                title="Open Website"
+            >
+                <Globe size={16} />
+            </Button>
           )}
           <Button
             size="icon"

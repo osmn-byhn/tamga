@@ -33,7 +33,7 @@ const DeleteConfirmDialog = ({
             <DialogTrigger asChild onClick={(e) => e.stopPropagation()}>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 rounded-full bg-destructive/10 text-destructive">

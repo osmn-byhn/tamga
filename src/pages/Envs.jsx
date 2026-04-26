@@ -67,11 +67,12 @@ const Envs = () => {
     await updateData("tamga-envs", newItems);
   };
 
-  const handleAddEnv = async ({ projectName, content }) => {
+  const handleAddEnv = async ({ projectName, content, url = "" }) => {
     const newItem = {
       id: Date.now(),
       projectName,
       content,
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -93,7 +94,7 @@ const Envs = () => {
 
     // 1. Update the item itself
     const updated = envItems.map(item =>
-      item.id === id ? { ...item, ...updatedData } : item
+      item.id === id ? { ...item, ...updatedData, url: (updatedData.url !== undefined ? updatedData.url : item.url || "").trim() } : item
     );
     await saveEnvs(updated);
 
@@ -231,9 +232,9 @@ const Envs = () => {
     }
   };
 
-  const onRenameGroup = (id, newName) => {
+  const onRenameGroup = (id, newName, newColor) => {
     const updated = envItems.map(i => {
-      if (i.id === id) return { ...i, name: newName };
+      if (i.id === id) return { ...i, name: newName, color: newColor };
       return i;
     });
     saveEnvs(updated);
@@ -332,7 +333,7 @@ const Envs = () => {
                         <GroupCard 
                             group={item} 
                             onDelete={onDeleteGroup}
-                            onRename={(id, name) => setRenameGroupData({ id, name })}
+                            onRename={(id, name, color) => setRenameGroupData({ id, name, color })}
                             onUngroup={onUngroup}
                             isGroupingTarget={combineTargetId === item.id}
                         >
@@ -368,14 +369,15 @@ const Envs = () => {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => {
-            if (renameGroupData?.isJustCreated) {
+          onClose={(isConfirmed) => {
+            if (renameGroupData?.isJustCreated && !isConfirmed) {
               onUngroup(renameGroupData.id);
             }
             setRenameGroupData(null);
           }}
           initialName={renameGroupData.name}
-          onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
+          initialColor={renameGroupData.color}
+          onConfirm={(newName, newColor) => onRenameGroup(renameGroupData.id, newName, newColor)}
         />
       )}
     </div>

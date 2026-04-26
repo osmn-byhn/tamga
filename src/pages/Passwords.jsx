@@ -34,7 +34,7 @@ import DeleteConfirmDialog from "@/components/DeleteConfirmDialog";
 
 export default function Passwords() {
   const { getData, updateData } = useAuth();
-  const { hideSensitiveData } = useSettings();
+  const { hideSensitiveData, maskStyle } = useSettings();
   const [passwords, setPasswords] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,6 +48,7 @@ export default function Passwords() {
   const [password, setPassword] = useState("");
   const [platform, setPlatform] = useState("");
   const [username, setUsername] = useState("");
+  const [url, setUrl] = useState("");
   const [copied, setCopied] = useState(false);
 
   // Visibility state
@@ -110,6 +111,7 @@ export default function Passwords() {
       value: pwd,
       platform: platform.trim(),
       username: username.trim(),
+      url: url.trim(),
       createdAt: new Date().toISOString(),
       links: []
     };
@@ -117,6 +119,7 @@ export default function Passwords() {
     await savePasswords(updated);
     setPlatform("");
     setUsername("");
+    setUrl("");
     toast.success("Password saved to history");
   };
 
@@ -144,7 +147,7 @@ export default function Passwords() {
     // 1. Update the item itself
     const updated = passwords.map(p =>
       p.id === id
-        ? { ...p, platform: newPlatform, username: newUsername, value: newValue, links: newLinks }
+        ? { ...p, platform: newPlatform, username: newUsername, value: newValue, url: (updatedFields?.url !== undefined ? updatedFields.url : p.url || "").trim(), links: newLinks }
         : p
     );
     await savePasswords(updated);
@@ -286,9 +289,9 @@ export default function Passwords() {
     }
   };
 
-  const onRenameGroup = (id, newName) => {
+  const onRenameGroup = (id, newName, newColor) => {
     const updated = passwords.map(i => {
-      if (i.id === id) return { ...i, name: newName };
+      if (i.id === id) return { ...i, name: newName, color: newColor };
       return i;
     });
     savePasswords(updated);
@@ -411,10 +414,10 @@ export default function Passwords() {
                       setPassword(e.target.value);
                       setCopied(false);
                     }}
-                    type={(!showMainPassword && hideSensitiveData) ? "password" : "text"}
+                    type={(!showMainPassword && hideSensitiveData && maskStyle !== 'blur') ? "password" : "text"}
                     className={cn(
                       "bg-muted h-20 rounded-lg font-mono text-2xl text-center break-all pr-32 border-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-300",
-                      (!showMainPassword && hideSensitiveData) ? "blur-md" : "blur-0"
+                      (!showMainPassword && hideSensitiveData && maskStyle === 'blur') ? "blur-md" : "blur-0"
                     )}
                   />
                   <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -429,11 +432,10 @@ export default function Passwords() {
                     <Button
                       variant="ghost"
                       className="text-muted-foreground hover:text-foreground h-12 w-12"
-                      onClick={() => savePasswordToHistory(password)}
-                      disabled={!password}
-                      title="Save to History"
+                      onClick={generatePassword}
+                      title="Regenerate Password"
                     >
-                      <Save size={28} />
+                      <RefreshCw size={24} />
                     </Button>
                     <Button
                       variant="ghost"
@@ -448,7 +450,7 @@ export default function Passwords() {
 
                 {password && (
                   <>
-                    <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                       <div className="space-y-1.5">
                         <Label htmlFor="platform" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Platform</Label>
                         <div className="relative">
@@ -471,6 +473,19 @@ export default function Passwords() {
                             placeholder="Username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
+                            className="pl-9 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="url" className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">URL / Domain</Label>
+                        <div className="relative">
+                          <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Input
+                            id="url"
+                            placeholder="https://example.com"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
                             className="pl-9 h-9 text-sm"
                           />
                         </div>
@@ -505,11 +520,12 @@ export default function Passwords() {
 
                 <Button
                   size="lg"
-                  className="w-full gap-2 text-lg h-12"
-                  onClick={generatePassword}
+                  className="w-full gap-2 text-lg h-12 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300"
+                  onClick={() => savePasswordToHistory(password)}
+                  disabled={!password}
                 >
-                  <RefreshCw className="h-5 w-5" />
-                  Regenerate
+                  <Save className="h-5 w-5" />
+                  Save Password
                 </Button>
               </CardContent>
             </Card>
@@ -578,7 +594,7 @@ export default function Passwords() {
                             <GroupCard 
                               group={item} 
                               onDelete={onDeleteGroup}
-                              onRename={(id, name) => setRenameGroupData({ id, name })}
+                              onRename={(id, name, color) => setRenameGroupData({ id, name, color })}
                               onUngroup={onUngroup}
                               isGroupingTarget={combineTargetId === item.id}
                             >
@@ -616,14 +632,15 @@ export default function Passwords() {
       {renameGroupData && (
         <RenameGroupDialog 
           isOpen={!!renameGroupData}
-          onClose={() => {
-            if (renameGroupData?.isJustCreated) {
+          onClose={(isConfirmed) => {
+            if (renameGroupData?.isJustCreated && !isConfirmed) {
               onUngroup(renameGroupData.id);
             }
             setRenameGroupData(null);
           }}
           initialName={renameGroupData.name}
-          onConfirm={(newName) => onRenameGroup(renameGroupData.id, newName)}
+          initialColor={renameGroupData.color}
+          onConfirm={(newName, newColor) => onRenameGroup(renameGroupData.id, newName, newColor)}
         />
       )}
     </div >

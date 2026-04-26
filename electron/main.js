@@ -78,6 +78,7 @@ async function createWindow() {
     height: 800,
     icon: iconImage,
     autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload,
       nodeIntegration: false,
@@ -187,6 +188,23 @@ app.whenReady().then(() => {
       console.error("Update error:", error);
       return { success: false, error: error.message };
     }
+  });
+
+  // Window Controls
+  ipcMain.on('window-minimize', () => {
+    win?.minimize();
+  });
+
+  ipcMain.on('window-maximize', () => {
+    if (win?.isMaximized()) {
+      win.unmaximize();
+    } else {
+      win?.maximize();
+    }
+  });
+
+  ipcMain.on('window-close', () => {
+    win?.close();
   });
 });
 

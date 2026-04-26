@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Copy, Trash2, Eye, EyeOff, Share2, ExternalLink, Pencil, GripVertical } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Share2, ExternalLink, Pencil, GripVertical, Globe } from "lucide-react";
 import ExportOtpDialog from "./ExportOtpDialog";
 import EditOtpDialog from "./EditOtpDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
-import { cn } from "@/lib/utils";
+import { cn, getFaviconUrl } from "@/lib/utils";
+import CensoredText from "./CensoredText";
 import { toast } from "sonner";
 import * as OTPAuth from "otpauth";
 
@@ -74,20 +75,22 @@ const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                     <GripVertical className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <p className="text-sm font-medium text-muted-foreground truncate" title={totp.issuer}>
-                        {totp.issuer || "Unknown Issuer"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                        {otpItem.url && (
+                            <img src={getFaviconUrl(otpItem.url)} alt="" className="h-4 w-4 object-contain rounded-sm" />
+                        )}
+                        <p className="text-sm font-medium text-muted-foreground truncate" title={totp.issuer}>
+                            {totp.issuer || "Unknown Issuer"}
+                        </p>
+                    </div>
                     <h3 className="text-lg font-bold truncate text-foreground" title={totp.label}>
                         {totp.label.includes(":") ? totp.label.split(":")[1].trim() : totp.label}
                     </h3>
                     <div
-                        className={cn(
-                            "text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-all duration-300 mt-1",
-                            (hideSensitiveData && !isVisible) ? "blur-md select-none" : "blur-0"
-                        )}
+                        className="text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-all duration-300 mt-1"
                         onClick={copyToClipboard}
                     >
-                        {code.slice(0, 3)} {code.slice(3)}
+                        <CensoredText value={`${code.slice(0, 3)} ${code.slice(3)}`} isVisible={isVisible} />
                     </div>
                 </div>
 
@@ -120,6 +123,17 @@ const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                                     <ExternalLink className="h-4 w-4" />
                                 </Button>
                             </Link>
+                        )}
+                        {otpItem.url && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                onClick={() => window.open(otpItem.url, '_blank')}
+                                title="Open Website"
+                            >
+                                <Globe size={14} />
+                            </Button>
                         )}
                         <EditOtpDialog otpItem={otpItem} onUpdate={onUpdate}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="EditAccount">

@@ -28,7 +28,7 @@ import pkg from "../../package.json";
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { hasPassword, setMasterPassword, removeMasterPassword, unlock, exportData, importData } = useAuth();
-  const { hideSensitiveData, setHideSensitiveData } = useSettings();
+  const { hideSensitiveData, setHideSensitiveData, maskStyle, setMaskStyle } = useSettings();
 
   // Password Management State
   const [newPassword, setNewPassword] = useState("");
@@ -244,23 +244,47 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
-                variant={hideSensitiveData ? "default" : "outline"}
-                onClick={() => setHideSensitiveData(!hideSensitiveData)}
-                className={`flex items-center gap-3 h-12 px-6 transition-all duration-300 ${hideSensitiveData ? "bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20" : ""}`}
-              >
-                {hideSensitiveData ? (
-                  <>
-                    <EyeOff className="h-5 w-5" />
-                    <span>Privacy Mode: ON (Data Hidden)</span>
-                  </>
-                ) : (
-                  <>
-                    <Eye className="h-5 w-5" />
-                    <span>Privacy Mode: OFF (Data Visible)</span>
-                  </>
+              <div className="space-y-6">
+                <Button
+                  variant={hideSensitiveData ? "default" : "outline"}
+                  onClick={() => setHideSensitiveData(!hideSensitiveData)}
+                  className={`flex items-center gap-3 h-12 px-6 transition-all duration-300 ${hideSensitiveData ? "bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20" : ""}`}
+                >
+                  {hideSensitiveData ? (
+                    <>
+                      <EyeOff className="h-5 w-5" />
+                      <span>Privacy Mode: ON (Data Hidden)</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="h-5 w-5" />
+                      <span>Privacy Mode: OFF (Data Visible)</span>
+                    </>
+                  )}
+                </Button>
+
+                {hideSensitiveData && (
+                  <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800 animate-in fade-in slide-in-from-top-2">
+                    <div>
+                      <Label className="text-sm font-semibold mb-1.5 block">Censorship Style</Label>
+                      <p className="text-xs text-muted-foreground mb-4">Choose how sensitive data is hidden when Privacy Mode is active.</p>
+                    </div>
+                    <Tabs value={maskStyle} onValueChange={setMaskStyle} className="w-full max-w-md">
+                      <TabsList className="grid w-full grid-cols-3 h-12">
+                        <TabsTrigger value="blur" className="flex items-center gap-2">
+                          <EyeOff className="h-4 w-4" /> Blur
+                        </TabsTrigger>
+                        <TabsTrigger value="stars" className="flex items-center gap-2">
+                          <span className="font-bold text-lg leading-none">***</span> Stars
+                        </TabsTrigger>
+                        <TabsTrigger value="dots" className="flex items-center gap-2">
+                          <span className="font-bold text-lg leading-none">•••</span> Dots
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
                 )}
-              </Button>
+              </div>
             </CardContent>
           </Card>
         </section>
@@ -466,7 +490,7 @@ const Settings = () => {
 
         {/* Import/Restore Password Dialog */}
         <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Shield className="h-6 w-6 text-purple-600" />
@@ -562,7 +586,7 @@ const Settings = () => {
 
         {/* About App Dialog */}
         <Dialog open={showAboutDialog} onOpenChange={setShowAboutDialog}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
                 <Info className="h-6 w-6 text-purple-600" />

@@ -7,3 +7,9 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     send: (channel, ...args) => ipcRenderer.send(channel, ...args),
     invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
 })
+
+contextBridge.exposeInMainWorld('windowControls', {
+    minimize: () => ipcRenderer.send('window-minimize'),
+    maximize: () => ipcRenderer.send('window-maximize'),
+    close: () => ipcRenderer.send('window-close'),
+})

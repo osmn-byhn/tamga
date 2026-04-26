@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import LinkSelector from "./LinkSelector";
 import * as OTPAuth from "otpauth";
+import { ExternalLink } from "lucide-react";
 
 const EditOtpDialog = ({ otpItem, onUpdate, children }) => {
     const [open, setOpen] = useState(false);
     const [uri, setUri] = useState(otpItem.uri || "");
+    const [url, setUrl] = useState(otpItem.url || "");
     const [links, setLinks] = useState(otpItem.links || []);
 
     const handleSubmit = (e) => {
@@ -30,6 +32,7 @@ const EditOtpDialog = ({ otpItem, onUpdate, children }) => {
 
         onUpdate(otpItem.id, {
             uri: uri.trim(),
+            url: url.trim(),
             links: links
         });
 
@@ -42,7 +45,7 @@ const EditOtpDialog = ({ otpItem, onUpdate, children }) => {
             <DialogTrigger asChild>
                 {children}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Edit OTP Account</DialogTitle>
                     <DialogDescription>
@@ -58,6 +61,20 @@ const EditOtpDialog = ({ otpItem, onUpdate, children }) => {
                             value={uri}
                             onChange={(e) => setUri(e.target.value)}
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="edit-otp-url">URL / Domain (Optional)</Label>
+                        <div className="relative">
+                            <ExternalLink className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                id="edit-otp-url"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                placeholder="https://google.com"
+                                className="pl-10"
+                            />
+                        </div>
                     </div>
 
                     <LinkSelector currentLinks={links} onLinksChange={setLinks} />
