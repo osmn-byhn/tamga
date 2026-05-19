@@ -23,6 +23,7 @@ const TitleBar = () => {
 
   const navItems = [
     { path: "/connections", icon: "bi-diagram-3-fill", label: "Connections" },
+    { path: "/health", icon: "bi-heart-pulse-fill", label: "Password Health" },
     { path: "/settings", icon: "bi-gear-wide-connected", label: "Settings" },
   ];
 

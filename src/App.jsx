@@ -11,6 +11,7 @@ import Passwords from "./pages/Passwords";
 import Settings from "./pages/Settings";
 import ItemDetail from "./pages/ItemDetail";
 import GraphView from "./pages/GraphView";
+import PasswordHealth from "./pages/PasswordHealth";
 import RecoveryCodes from "./pages/RecoveryCodes";
 import TitleBar from "./components/TitleBar";
 
@@ -33,6 +34,7 @@ function App() {
                 <Route path="backup-codes" element={<Passkeys />} />
                 <Route path="recovery-codes" element={<RecoveryCodes />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="health" element={<PasswordHealth />} />
                 <Route path="details/:type/:id" element={<ItemDetail />} />
                 <Route path="connections" element={<GraphView />} />
               </Route>
