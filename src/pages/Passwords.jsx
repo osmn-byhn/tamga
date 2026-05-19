@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import { cn, copyToClipboard } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { Copy, RefreshCw, Check, Save, Trash2, Globe, User, Pencil, X, Eye, EyeOff, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -382,9 +382,9 @@ export default function Passwords() {
     generatePassword();
   }, [length, includeUppercase, includeLowercase, includeNumbers, includeSymbols]);
 
-  const copyToClipboard = () => {
+  const handleCopyToClipboard = () => {
     if (password) {
-      navigator.clipboard.writeText(password);
+      copyToClipboard(password);
       setCopied(true);
       toast.success("Password copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
@@ -440,7 +440,7 @@ export default function Passwords() {
                     <Button
                       variant="ghost"
                       className="text-muted-foreground hover:text-foreground h-12 w-12"
-                      onClick={copyToClipboard}
+                      onClick={handleCopyToClipboard}
                       title="Copy Password"
                     >
                       {copied ? <Check size={28} className="text-green-500" /> : <Copy size={28} />}

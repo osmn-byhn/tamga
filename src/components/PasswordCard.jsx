@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Pencil, Copy, Trash2, ExternalLink, GripVertical, Shield, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
-import { cn, getFaviconUrl } from "@/lib/utils";
+import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
 import EditPasswordDialog from "./EditPasswordDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
@@ -103,7 +103,7 @@ const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTar
             variant="ghost"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
             onClick={() => {
-              navigator.clipboard.writeText(item.value);
+              copyToClipboard(item.value);
               toast.success("Password copied");
             }}
             title="Copy Password"

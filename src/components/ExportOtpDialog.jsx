@@ -13,6 +13,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import * as OTPAuth from "otpauth";
 import { Copy, Download, Key, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { copyToClipboard } from "@/lib/utils";
 
 const ExportOtpDialog = ({ children, otpUri }) => {
     const canvasRef = useRef(null);
@@ -31,7 +32,7 @@ const ExportOtpDialog = ({ children, otpUri }) => {
 
     const copySecret = () => {
         if (!secret) return;
-        navigator.clipboard.writeText(secret);
+        copyToClipboard(secret);
         toast.success("Secret key copied to clipboard");
     };
 

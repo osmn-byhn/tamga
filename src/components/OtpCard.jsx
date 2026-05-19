@@ -7,7 +7,7 @@ import EditOtpDialog from "./EditOtpDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
-import { cn, getFaviconUrl } from "@/lib/utils";
+import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 import { toast } from "sonner";
 import * as OTPAuth from "otpauth";
@@ -49,8 +49,8 @@ const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
         return () => clearInterval(interval);
     }, [totp]);
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(code);
+    const handleCopy = () => {
+        copyToClipboard(code);
         toast.success("Code copied to clipboard");
     };
 
@@ -88,7 +88,7 @@ const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                     </h3>
                     <div
                         className="text-3xl font-mono font-bold tracking-widest text-foreground cursor-pointer hover:text-primary transition-all duration-300 mt-1"
-                        onClick={copyToClipboard}
+                        onClick={handleCopy}
                     >
                         <CensoredText value={`${code.slice(0, 3)} ${code.slice(3)}`} isVisible={isVisible} />
                     </div>
@@ -149,7 +149,7 @@ const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                         >
                             {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={copyToClipboard}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleCopy}>
                             <Copy className="h-4 w-4" />
                         </Button>
                         <ExportOtpDialog otpUri={otpUri}>

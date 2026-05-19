@@ -7,7 +7,7 @@ import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
-import { cn, getFaviconUrl } from "@/lib/utils";
+import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 import {
     Dialog,
@@ -21,8 +21,8 @@ const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
     const [showFull, setShowFull] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
 
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(envItem.content);
+    const handleCopy = () => {
+        copyToClipboard(envItem.content);
         toast.success("Env content copied to clipboard");
     };
 
@@ -122,7 +122,7 @@ const EnvCard = ({ envItem, onDelete, onUpdate, dragHandleProps, isGroupingTarge
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                onClick={copyToClipboard}
+                                onClick={handleCopy}
                                 title="Copy Content"
                             >
                                 <Copy className="h-4 w-4" />

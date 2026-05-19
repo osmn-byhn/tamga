@@ -7,17 +7,12 @@ import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
-import { cn, getFaviconUrl } from "@/lib/utils";
+import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 
 const PasskeyCard = ({ passkey, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
     const { hideSensitiveData, maskStyle } = useSettings();
     const [isVisible, setIsVisible] = useState(false);
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(passkey.secret);
-        toast.success("Passkey copied to clipboard");
-    };
 
     return (
         <Card className={cn(
@@ -107,7 +102,10 @@ const PasskeyCard = ({ passkey, onDelete, onUpdate, dragHandleProps, isGroupingT
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={copyToClipboard}
+                            onClick={() => {
+                                copyToClipboard(passkey.secret);
+                                toast.success("Passkey secret copied");
+                            }}
                             title="Copy"
                         >
                             <Copy className="h-4 w-4" />
