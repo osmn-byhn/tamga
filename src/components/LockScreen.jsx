@@ -37,6 +37,7 @@ const LockScreen = () => {
         } else {
             setFailedCount(0);
             localStorage.removeItem("tamga-failed-attempts-count");
+            setPassword(""); // Security: Clear password so it's not pre-filled next time
         }
     };
 
@@ -51,6 +52,8 @@ const LockScreen = () => {
             return;
         }
         await setMasterPassword(password);
+        setPassword(""); // Security: Clear password so it's not pre-filled next time
+        setConfirmPassword("");
     };
 
     if (!hasPassword) {
