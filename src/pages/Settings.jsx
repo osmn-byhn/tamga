@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw, Info, Eye, EyeOff } from "lucide-react";
 import { useSettings } from "@/context/SettingsContext";
@@ -513,21 +514,44 @@ const Settings = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>Inactivity Timeout</Label>
-                  <select 
-                    value={autoLockTimeout}
-                    onChange={(e) => setAutoLockTimeout(parseInt(e.target.value, 10))}
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              <div className="space-y-6 max-w-md">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Enable Auto-Lock</Label>
+                    <p className="text-xs text-muted-foreground">Secure your vault when you step away.</p>
+                  </div>
+                  <Button 
+                    variant={autoLockTimeout > 0 ? "default" : "outline"} 
+                    onClick={() => setAutoLockTimeout(autoLockTimeout > 0 ? 0 : 5)}
+                    className={autoLockTimeout > 0 ? "bg-purple-600 hover:bg-purple-700 shadow-md shadow-purple-500/20 text-white" : ""}
                   >
-                    <option value={0}>Disabled</option>
-                    <option value={1}>1 Minute</option>
-                    <option value={5}>5 Minutes</option>
-                    <option value={15}>15 Minutes</option>
-                    <option value={30}>30 Minutes</option>
-                  </select>
+                    {autoLockTimeout > 0 ? "Enabled" : "Disabled"}
+                  </Button>
                 </div>
+                
+                {autoLockTimeout > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Inactivity Timeout</Label>
+                      <span className="font-bold text-lg text-purple-600 dark:text-purple-400">
+                        {autoLockTimeout} {autoLockTimeout === 1 ? 'Minute' : 'Minutes'}
+                      </span>
+                    </div>
+                    <Slider 
+                      value={[autoLockTimeout]} 
+                      min={1} 
+                      max={60} 
+                      step={1} 
+                      onValueChange={(vals) => setAutoLockTimeout(vals[0])}
+                      className="w-full py-2"
+                    />
+                    <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                        <span>1 Min</span>
+                        <span>30 Min</span>
+                        <span>60 Min</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
