@@ -2,21 +2,42 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Lock, KeyRound } from "lucide-react";
+import { Lock, KeyRound, AlertTriangle } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
 
 const LockScreen = () => {
-    const { isLocked, hasPassword, unlock, setMasterPassword } = useAuth();
+    const { isLocked, hasPassword, unlock, setMasterPassword, emergencyWipe } = useAuth();
+    const { maxFailedAttempts, failedAction, backupPath } = useSettings();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState(false);
     const [setupError, setSetupError] = useState("");
+    const [failedCount, setFailedCount] = useState(() => {
+        return parseInt(localStorage.getItem("tamga-failed-attempts-count") || "0", 10);
+    });
+    const [isWiping, setIsWiping] = useState(false);
 
     const handleUnlock = async (e) => {
         e.preventDefault();
         const isValid = await unlock(password);
         if (!isValid) {
-            setError(true);
-            setPassword("");
+            const newCount = failedCount + 1;
+            setFailedCount(newCount);
+            localStorage.setItem("tamga-failed-attempts-count", newCount.toString());
+            
+            if (maxFailedAttempts > 0 && newCount >= maxFailedAttempts) {
+                setIsWiping(true);
+                await emergencyWipe(failedAction === 'backup_wipe', backupPath);
+                // State will reset automatically because app loses hasPassword state
+                localStorage.removeItem("tamga-failed-attempts-count");
+            } else {
+                setError(true);
+                setPassword("");
+            }
+        } else {
+            setFailedCount(0);
+            localStorage.removeItem("tamga-failed-attempts-count");
+            setPassword(""); // Security: Clear password so it's not pre-filled next time
         }
     };
 
@@ -31,6 +52,8 @@ const LockScreen = () => {
             return;
         }
         await setMasterPassword(password);
+        setPassword(""); // Security: Clear password so it's not pre-filled next time
+        setConfirmPassword("");
     };
 
     if (!hasPassword) {
@@ -82,6 +105,18 @@ const LockScreen = () => {
 
     if (!isLocked) return null;
 
+    if (isWiping) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md transition-all duration-500">
+                <div className="w-full max-w-md p-8 space-y-6 bg-card rounded-xl shadow-2xl border border-destructive animate-in fade-in zoom-in duration-300 flex flex-col items-center text-center">
+                    <AlertTriangle className="h-16 w-16 text-destructive animate-pulse" />
+                    <h2 className="text-2xl font-bold tracking-tight text-destructive">Security Breach Detected</h2>
+                    <p className="text-muted-foreground">Maximum failed attempts reached. Executing emergency data wipe protocol...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md transition-all duration-500">
             <div className="w-full max-w-md p-8 space-y-8 bg-card rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in duration-300">
@@ -106,7 +141,12 @@ const LockScreen = () => {
                             className={`text-center text-lg h-12 ${error ? 'border-red-500 ring-red-500/20' : ''}`}
                             autoFocus
                         />
-                        {error && <p className="text-sm text-red-500 text-center animate-pulse">Incorrect password</p>}
+                        {error && (
+                            <p className="text-sm text-red-500 text-center animate-pulse">
+                                Incorrect password. 
+                                {maxFailedAttempts > 0 && ` Attempt ${failedCount} of ${maxFailedAttempts}`}
+                            </p>
+                        )}
                     </div>
 
                     <Button type="submit" disabled={!password} className="w-full h-12 text-lg font-medium bg-purple-600 hover:bg-purple-700 text-white">

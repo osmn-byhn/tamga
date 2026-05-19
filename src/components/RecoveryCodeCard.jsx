@@ -7,17 +7,12 @@ import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
-import { cn, getFaviconUrl } from "@/lib/utils";
+import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 
 const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {
     const { hideSensitiveData, maskStyle } = useSettings();
     const [isVisible, setIsVisible] = useState(false);
-
-    const copyToClipboard = () => {
-        navigator.clipboard.writeText(recovery.codes);
-        toast.success("Recovery codes copied to clipboard");
-    };
 
     return (
         <Card className={cn(
@@ -108,7 +103,10 @@ const RecoveryCodeCard = ({ recovery, onDelete, onUpdate, dragHandleProps, isGro
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={copyToClipboard}
+                            onClick={() => {
+                                copyToClipboard(recovery.codes);
+                                toast.success("Recovery codes copied to clipboard");
+                            }}
                             title="Copy All"
                         >
                             <Copy className="h-4 w-4" />

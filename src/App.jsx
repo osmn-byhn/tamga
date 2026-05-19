@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./context/AuthContext";
 import LockScreen from "./components/LockScreen";
+import AutoLock from "./components/AutoLock";
 import RootLayout from "./components/RootLayout";
 import Envs from "./pages/Envs";
 import OtpCodes from "./pages/OtpCodes";
@@ -10,6 +11,7 @@ import Passwords from "./pages/Passwords";
 import Settings from "./pages/Settings";
 import ItemDetail from "./pages/ItemDetail";
 import GraphView from "./pages/GraphView";
+import PasswordHealth from "./pages/PasswordHealth";
 import RecoveryCodes from "./pages/RecoveryCodes";
 import TitleBar from "./components/TitleBar";
 
@@ -20,6 +22,7 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <SettingsProvider>
         <AuthProvider>
+          <AutoLock />
           <LockScreen />
           <HashRouter>
             <TitleBar />
@@ -31,6 +34,7 @@ function App() {
                 <Route path="backup-codes" element={<Passkeys />} />
                 <Route path="recovery-codes" element={<RecoveryCodes />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="health" element={<PasswordHealth />} />
                 <Route path="details/:type/:id" element={<ItemDetail />} />
                 <Route path="connections" element={<GraphView />} />
               </Route>

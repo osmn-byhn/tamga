@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { Moon, Sun, Monitor, Lock, Unlock, Shield, Download, Upload, Database, KeyRound, RefreshCw, Info, Eye, EyeOff } from "lucide-react";
 import { useSettings } from "@/context/SettingsContext";
@@ -28,7 +29,14 @@ import pkg from "../../package.json";
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { hasPassword, setMasterPassword, removeMasterPassword, unlock, exportData, importData } = useAuth();
-  const { hideSensitiveData, setHideSensitiveData, maskStyle, setMaskStyle } = useSettings();
+  const { 
+    hideSensitiveData, setHideSensitiveData, 
+    maskStyle, setMaskStyle,
+    maxFailedAttempts, setMaxFailedAttempts,
+    failedAction, setFailedAction,
+    backupPath, setBackupPath,
+    autoLockTimeout, setAutoLockTimeout
+  } = useSettings();
 
   // Password Management State
   const [newPassword, setNewPassword] = useState("");
@@ -63,6 +71,17 @@ const Settings = () => {
     setNewPassword("");
     setConfirmPassword("");
     toast.success("Master password set successfully");
+  };
+
+  const handleSelectBackupDir = async () => {
+    if (!window.ipcRenderer) {
+      toast.error("Directory selection is only supported in the desktop app.");
+      return;
+    }
+    const result = await window.ipcRenderer.invoke('select-directory');
+    if (result.success && result.path) {
+      setBackupPath(result.path);
+    }
   };
 
   const handleRemovePassword = async (e) => {
@@ -484,6 +503,115 @@ const Settings = () => {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+            <CardHeader>
+              <CardTitle>Auto-Lock</CardTitle>
+              <CardDescription>
+                Automatically lock the application after a period of inactivity.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6 max-w-md">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Enable Auto-Lock</Label>
+                    <p className="text-xs text-muted-foreground">Secure your vault when you step away.</p>
+                  </div>
+                  <Button 
+                    variant={autoLockTimeout > 0 ? "default" : "outline"} 
+                    onClick={() => setAutoLockTimeout(autoLockTimeout > 0 ? 0 : 5)}
+                    className={autoLockTimeout > 0 ? "bg-purple-600 hover:bg-purple-700 shadow-md shadow-purple-500/20 text-white" : ""}
+                  >
+                    {autoLockTimeout > 0 ? "Enabled" : "Disabled"}
+                  </Button>
+                </div>
+                
+                {autoLockTimeout > 0 && (
+                  <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800 animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Inactivity Timeout</Label>
+                      <span className="font-bold text-lg text-purple-600 dark:text-purple-400">
+                        {autoLockTimeout} {autoLockTimeout === 1 ? 'Minute' : 'Minutes'}
+                      </span>
+                    </div>
+                    <Slider 
+                      value={[autoLockTimeout]} 
+                      min={1} 
+                      max={60} 
+                      step={1} 
+                      onValueChange={(vals) => setAutoLockTimeout(vals[0])}
+                      className="w-full py-2"
+                    />
+                    <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                        <span>1 Min</span>
+                        <span>30 Min</span>
+                        <span>60 Min</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+            <CardHeader>
+              <CardTitle>Intruder Protection</CardTitle>
+              <CardDescription>
+                Automatically wipe the vault if someone tries to guess your master password.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6 max-w-md">
+                <div className="space-y-2">
+                  <Label>Maximum Failed Attempts</Label>
+                  <select 
+                    value={maxFailedAttempts}
+                    onChange={(e) => setMaxFailedAttempts(parseInt(e.target.value, 10))}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value={0}>Disabled</option>
+                    <option value={3}>3 Attempts</option>
+                    <option value={5}>5 Attempts</option>
+                    <option value={10}>10 Attempts</option>
+                  </select>
+                </div>
+                
+                {maxFailedAttempts > 0 && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <Label>Action on Failure</Label>
+                    <select
+                      value={failedAction}
+                      onChange={(e) => setFailedAction(e.target.value)}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="wipe">Delete All Data (Wipe Vault)</option>
+                      <option value="backup_wipe">Take Encrypted Backup, then Delete</option>
+                    </select>
+                    {failedAction === 'backup_wipe' && (
+                        <div className="pt-2 space-y-2">
+                          <Label>Default Backup Directory</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                                value={backupPath} 
+                                readOnly 
+                                placeholder="Select a folder..." 
+                                className="flex-1 text-xs"
+                            />
+                            <Button onClick={handleSelectBackupDir} variant="outline">
+                                Browse
+                            </Button>
+                          </div>
+                          <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1">
+                              An encrypted raw backup file will be automatically saved here before data is wiped. If no directory is selected, you will be prompted to choose where to save during the emergency.
+                          </p>
+                        </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </section>

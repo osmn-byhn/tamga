@@ -1,110 +1,110 @@
 import { createRequire as __cjsRequire } from "module";
 const require = __cjsRequire(import.meta.url);
-import { BrowserWindow, Menu, app, desktopCapturer, ipcMain, nativeImage } from "electron";
+import { BrowserWindow, Menu, app, clipboard, desktopCapturer, dialog, ipcMain, nativeImage } from "electron";
 import "node:url";
 import path from "node:path";
 import fs from "node:fs";
-var __commonJSMin = (e, u) => () => (u || e((u = { exports: {} }).exports, u), u.exports), __require = /* @__PURE__ */ ((e) => require === void 0 ? typeof Proxy < "u" ? new Proxy(e, { get: (e, d) => (require === void 0 ? e : require)[d] }) : e : require)(function(e) {
+var __commonJSMin = (e, f) => () => (f || e((f = { exports: {} }).exports, f), f.exports), __require = /* @__PURE__ */ ((e) => require === void 0 ? typeof Proxy < "u" ? new Proxy(e, { get: (e, p) => (require === void 0 ? e : require)[p] }) : e : require)(function(e) {
 	if (require !== void 0) return require.apply(this, arguments);
 	throw Error("Calling `require` for \"" + e + "\" in an environment that doesn't expose the `require` function.");
-}), require_dist$1 = /* @__PURE__ */ __commonJSMin(((e, u) => {
-	var d = Object.defineProperty, f = Object.getOwnPropertyDescriptor, p = Object.getOwnPropertyNames, m = Object.prototype.hasOwnProperty, h = (e, u) => {
-		for (var f in u) d(e, f, {
-			get: u[f],
+}), require_dist$1 = /* @__PURE__ */ __commonJSMin(((e, f) => {
+	var p = Object.defineProperty, m = Object.getOwnPropertyDescriptor, h = Object.getOwnPropertyNames, g = Object.prototype.hasOwnProperty, _ = (e, f) => {
+		for (var m in f) p(e, m, {
+			get: f[m],
 			enumerable: !0
 		});
-	}, g = (e, u, h, g) => {
-		if (u && typeof u == "object" || typeof u == "function") for (let _ of p(u)) !m.call(e, _) && _ !== h && d(e, _, {
-			get: () => u[_],
-			enumerable: !(g = f(u, _)) || g.enumerable
+	}, v = (e, f, _, v) => {
+		if (f && typeof f == "object" || typeof f == "function") for (let y of h(f)) !g.call(e, y) && y !== _ && p(e, y, {
+			get: () => f[y],
+			enumerable: !(v = m(f, y)) || v.enumerable
 		});
 		return e;
-	}, _ = (e) => g(d({}, "__esModule", { value: !0 }), e), v = {};
-	h(v, { GithubFetcher: () => x }), u.exports = _(v);
-	function y(e) {
-		let u = e.match(/v?(\d+)\.(\d+)\.(\d+)(?:-.*)?/i);
-		return u ? [
-			parseInt(u[1], 10),
-			parseInt(u[2], 10),
-			parseInt(u[3], 10)
+	}, y = (e) => v(p({}, "__esModule", { value: !0 }), e), b = {};
+	_(b, { GithubFetcher: () => C }), f.exports = y(b);
+	function x(e) {
+		let f = e.match(/v?(\d+)\.(\d+)\.(\d+)(?:-.*)?/i);
+		return f ? [
+			parseInt(f[1], 10),
+			parseInt(f[2], 10),
+			parseInt(f[3], 10)
 		] : null;
 	}
-	function b(e, u) {
-		if (!u) return "initial";
-		let d = y(e), f = y(u);
-		return !d || !f ? "unknown" : d[0] > f[0] ? "major" : d[1] > f[1] ? "minor" : d[2] > f[2] ? "patch" : "unknown";
+	function S(e, f) {
+		if (!f) return "initial";
+		let p = x(e), m = x(f);
+		return !p || !m ? "unknown" : p[0] > m[0] ? "major" : p[1] > m[1] ? "minor" : p[2] > m[2] ? "patch" : "unknown";
 	}
-	var x = class {
-		constructor(e, u, d) {
-			this.owner = e, this.repo = u, this.token = d;
+	var C = class {
+		constructor(e, f, p) {
+			this.owner = e, this.repo = f, this.token = p;
 		}
-		async fetchReleases(e = 1, u = 30) {
-			let d = `https://api.github.com/repos/${this.owner}/${this.repo}/releases?page=${e}&per_page=${u}`, f = { Accept: "application/vnd.github.v3+json" };
-			this.token && (f.Authorization = `token ${this.token}`);
-			let p = await fetch(d, { headers: f });
-			if (!p.ok) throw Error(`Failed to fetch GitHub releases: ${p.status} ${p.statusText}`);
-			return await p.json();
+		async fetchReleases(e = 1, f = 30) {
+			let p = `https://api.github.com/repos/${this.owner}/${this.repo}/releases?page=${e}&per_page=${f}`, m = { Accept: "application/vnd.github.v3+json" };
+			this.token && (m.Authorization = `token ${this.token}`);
+			let h = await fetch(p, { headers: m });
+			if (!h.ok) throw Error(`Failed to fetch GitHub releases: ${h.status} ${h.statusText}`);
+			return await h.json();
 		}
 		async fetchAndProcessReleases(e = 30) {
-			let u = [], d = 1;
-			for (; u.length < e;) {
-				let f = Math.min(100, e - u.length), p = await this.fetchReleases(d, f);
-				if (p.length === 0) break;
-				u = u.concat(p), d++;
+			let f = [], p = 1;
+			for (; f.length < e;) {
+				let m = Math.min(100, e - f.length), h = await this.fetchReleases(p, m);
+				if (h.length === 0) break;
+				f = f.concat(h), p++;
 			}
-			let f = [];
-			for (let e = 0; e < u.length; e++) {
-				let d = u[e], p = e < u.length - 1 ? u[e + 1] : null, m = b(d.tag_name, p ? p.tag_name : null);
-				f.push({
-					...d,
-					versionGroup: m,
-					previousVersion: p ? p.tag_name : null
+			let m = [];
+			for (let e = 0; e < f.length; e++) {
+				let p = f[e], h = e < f.length - 1 ? f[e + 1] : null, g = S(p.tag_name, h ? h.tag_name : null);
+				m.push({
+					...p,
+					versionGroup: g,
+					previousVersion: h ? h.tag_name : null
 				});
 			}
-			return f;
+			return m;
 		}
 	};
 })), require_versionManager = /* @__PURE__ */ __commonJSMin(((e) => {
-	var u = e && e.__importDefault || function(e) {
+	var f = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.setCurrentVersion = e.getCurrentVersion = e.getVersionFile = void 0;
-	var d = u(__require("fs")), f = u(__require("path")), p = u(__require("os"));
-	e.getVersionFile = (e) => e ? f.default.resolve(e, "updater-version.json") : f.default.join(p.default.tmpdir(), "changelog-github-updater-version.json"), e.getCurrentVersion = (u) => {
-		let f = (0, e.getVersionFile)(u);
-		if (!d.default.existsSync(f)) return null;
-		let p = d.default.readFileSync(f, "utf-8");
+	var p = f(__require("fs")), m = f(__require("path")), h = f(__require("os"));
+	e.getVersionFile = (e) => e ? m.default.resolve(e, "updater-version.json") : m.default.join(h.default.tmpdir(), "changelog-github-updater-version.json"), e.getCurrentVersion = (f) => {
+		let m = (0, e.getVersionFile)(f);
+		if (!p.default.existsSync(m)) return null;
+		let h = p.default.readFileSync(m, "utf-8");
 		try {
-			return JSON.parse(p).currentVersion;
+			return JSON.parse(h).currentVersion;
 		} catch {
 			return null;
 		}
-	}, e.setCurrentVersion = (u, f) => {
-		let p = (0, e.getVersionFile)(f);
-		d.default.writeFileSync(p, JSON.stringify({ currentVersion: u }, null, 2));
+	}, e.setCurrentVersion = (f, m) => {
+		let h = (0, e.getVersionFile)(m);
+		p.default.writeFileSync(h, JSON.stringify({ currentVersion: f }, null, 2));
 	};
 })), require_updater = /* @__PURE__ */ __commonJSMin(((e) => {
-	var u = e && e.__importDefault || function(e) {
+	var f = e && e.__importDefault || function(e) {
 		return e && e.__esModule ? e : { default: e };
 	};
 	Object.defineProperty(e, "__esModule", { value: !0 }), e.updateIfNeeded = e.installUpdate = e.getOSAssetExtension = e.downloadAsset = void 0;
-	var d = require_dist$1(), f = require_versionManager(), p = u(__require("os")), m = u(__require("https")), h = u(__require("fs")), g = u(__require("path")), _ = __require("child_process"), v = u(__require("process"));
-	e.downloadAsset = (u, d) => new Promise((f, p) => {
-		let g = h.default.createWriteStream(d);
-		m.default.get(u, (m) => {
-			if (m.statusCode === 301 || m.statusCode === 302) return (0, e.downloadAsset)(m.headers.location, d).then(f).catch(p);
-			if (m.statusCode !== 200) {
-				p(/* @__PURE__ */ Error(`Failed to get '${u}' (${m.statusCode})`));
+	var p = require_dist$1(), m = require_versionManager(), h = f(__require("os")), g = f(__require("https")), _ = f(__require("fs")), v = f(__require("path")), y = __require("child_process"), b = f(__require("process"));
+	e.downloadAsset = (f, p) => new Promise((m, h) => {
+		let v = _.default.createWriteStream(p);
+		g.default.get(f, (g) => {
+			if (g.statusCode === 301 || g.statusCode === 302) return (0, e.downloadAsset)(g.headers.location, p).then(m).catch(h);
+			if (g.statusCode !== 200) {
+				h(/* @__PURE__ */ Error(`Failed to get '${f}' (${g.statusCode})`));
 				return;
 			}
-			m.pipe(g), g.on("finish", () => {
-				g.close(), f();
+			g.pipe(v), v.on("finish", () => {
+				v.close(), m();
 			});
 		}).on("error", (e) => {
-			h.default.unlink(d, () => p(e));
+			_.default.unlink(p, () => h(e));
 		});
 	}), e.getOSAssetExtension = () => {
-		let e = p.default.platform();
+		let e = h.default.platform();
 		return e === "win32" ? [".exe"] : e === "darwin" ? [".dmg", ".zip"] : e === "linux" ? [
 			".deb",
 			".AppImage",
@@ -112,68 +112,68 @@ var __commonJSMin = (e, u) => () => (u || e((u = { exports: {} }).exports, u), u
 			".tar.gz"
 		] : [];
 	}, e.installUpdate = (e) => {
-		let u = p.default.platform();
+		let f = h.default.platform();
 		try {
-			u === "win32" ? ((0, _.spawn)(e, {
+			f === "win32" ? ((0, y.spawn)(e, {
 				detached: !0,
 				stdio: "ignore"
-			}).unref(), v.default.exit()) : u === "darwin" ? (0, _.exec)(`open "${e}"`) : u === "linux" && (e.endsWith(".deb") ? (0, _.exec)(`pkexec dpkg -i "${e}"`, (e, u, d) => {
+			}).unref(), b.default.exit()) : f === "darwin" ? (0, y.exec)(`open "${e}"`) : f === "linux" && (e.endsWith(".deb") ? (0, y.exec)(`pkexec dpkg -i "${e}"`, (e, f, p) => {
 				e && console.error("Update failed:", e);
-			}) : e.endsWith(".AppImage") ? ((0, _.exec)(`chmod +x "${e}" && "${e}"`), v.default.exit()) : (0, _.exec)(`xdg-open "${e}"`));
+			}) : e.endsWith(".AppImage") ? ((0, y.exec)(`chmod +x "${e}" && "${e}"`), b.default.exit()) : (0, y.exec)(`xdg-open "${e}"`));
 		} catch (e) {
 			console.error("Install step failed", e);
 		}
-	}, e.updateIfNeeded = async (u, m) => {
-		let { owner: h, repo: _, currentVersion: v, tempPath: y, autoInstall: b } = u, x = await new d.GithubFetcher(h, _).fetchAndProcessReleases();
-		if (!x || x.length === 0) return { updated: !1 };
-		let S = x[0], C = S.tag_name, w = v || (0, f.getCurrentVersion)(y);
-		if (w !== C) {
-			if (m) try {
-				await m(w || "none", C);
+	}, e.updateIfNeeded = async (f, g) => {
+		let { owner: _, repo: y, currentVersion: b, tempPath: x, autoInstall: S } = f, C = await new p.GithubFetcher(_, y).fetchAndProcessReleases();
+		if (!C || C.length === 0) return { updated: !1 };
+		let w = C[0], T = w.tag_name, E = b || (0, m.getCurrentVersion)(x);
+		if (E !== T) {
+			if (g) try {
+				await g(E || "none", T);
 			} catch (e) {
 				console.error("Middleware çalıştırılırken hata:", e);
 			}
-			if (b !== !1 && S.assets && S.assets.length > 0) {
-				let u = (0, e.getOSAssetExtension)(), d = S.assets.find((e) => u.some((u) => e.name.endsWith(u)));
-				if (d && d.browser_download_url) {
-					console.log(`Downloading update: ${d.name}...`);
-					let u = y || p.default.tmpdir(), f = g.default.join(u, d.name);
+			if (S !== !1 && w.assets && w.assets.length > 0) {
+				let f = (0, e.getOSAssetExtension)(), p = w.assets.find((e) => f.some((f) => e.name.endsWith(f)));
+				if (p && p.browser_download_url) {
+					console.log(`Downloading update: ${p.name}...`);
+					let f = x || h.default.tmpdir(), m = v.default.join(f, p.name);
 					try {
-						await (0, e.downloadAsset)(d.browser_download_url, f), console.log(`Download complete: ${f}`), (0, e.installUpdate)(f);
+						await (0, e.downloadAsset)(p.browser_download_url, m), console.log(`Download complete: ${m}`), (0, e.installUpdate)(m);
 					} catch (e) {
 						console.error("İndirme sırasında hata:", e);
 					}
 				} else console.warn("Uygun bir kurulum dosyası (asset) bulunamadı.");
 			}
-			return (0, f.setCurrentVersion)(C, y), {
+			return (0, m.setCurrentVersion)(T, x), {
 				updated: !0,
-				from: w,
-				to: C
+				from: E,
+				to: T
 			};
 		}
 		return {
 			updated: !1,
-			from: w
+			from: E
 		};
 	};
 })), require_types = /* @__PURE__ */ __commonJSMin(((e) => {
 	Object.defineProperty(e, "__esModule", { value: !0 });
 })), import_dist = (/* @__PURE__ */ __commonJSMin(((e) => {
-	var u = e && e.__createBinding || (Object.create ? (function(e, u, d, f) {
-		f === void 0 && (f = d);
-		var p = Object.getOwnPropertyDescriptor(u, d);
-		(!p || ("get" in p ? !u.__esModule : p.writable || p.configurable)) && (p = {
+	var f = e && e.__createBinding || (Object.create ? (function(e, f, p, m) {
+		m === void 0 && (m = p);
+		var h = Object.getOwnPropertyDescriptor(f, p);
+		(!h || ("get" in h ? !f.__esModule : h.writable || h.configurable)) && (h = {
 			enumerable: !0,
 			get: function() {
-				return u[d];
+				return f[p];
 			}
-		}), Object.defineProperty(e, f, p);
-	}) : (function(e, u, d, f) {
-		f === void 0 && (f = d), e[f] = u[d];
-	})), d = e && e.__exportStar || function(e, d) {
-		for (var f in e) f !== "default" && !Object.prototype.hasOwnProperty.call(d, f) && u(d, e, f);
+		}), Object.defineProperty(e, m, h);
+	}) : (function(e, f, p, m) {
+		m === void 0 && (m = p), e[m] = f[p];
+	})), p = e && e.__exportStar || function(e, p) {
+		for (var m in e) m !== "default" && !Object.prototype.hasOwnProperty.call(p, m) && f(p, e, m);
 	};
-	Object.defineProperty(e, "__esModule", { value: !0 }), d(require_updater(), e), d(require_types(), e), d(require_versionManager(), e);
+	Object.defineProperty(e, "__esModule", { value: !0 }), p(require_updater(), e), p(require_types(), e), p(require_versionManager(), e);
 })))(), __dirname = import.meta.dirname;
 app.setName("Tamga"), path.join(app.getPath("userData"), "vault.dat"), __dirname.includes(path.sep + ".vite" + path.sep) || __dirname.endsWith(path.sep + ".vite");
 var APP_PATH = app.getAppPath();
@@ -185,12 +185,12 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(APP_PATH, "public") : 
 var win = null;
 path.join(RENDERER_DIST, "index.html");
 async function createWindow() {
-	let e = process.platform === "win32" ? "tamga.ico" : "tamga.png", u = path.join(process.env.VITE_PUBLIC, e), f = nativeImage.createFromPath(u);
-	if (console.log("Setting window icon from:", u), console.log("Icon image size:", f.getSize()), console.log("Icon image is empty:", f.isEmpty()), win = new BrowserWindow({
+	let e = process.platform === "win32" ? "tamga.ico" : "tamga.png", f = path.join(process.env.VITE_PUBLIC, e), m = nativeImage.createFromPath(f);
+	if (console.log("Setting window icon from:", f), console.log("Icon image size:", m.getSize()), console.log("Icon image is empty:", m.isEmpty()), win = new BrowserWindow({
 		title: "Tamga",
 		width: 1200,
 		height: 800,
-		icon: f,
+		icon: m,
 		autoHideMenuBar: !0,
 		titleBarStyle: "hidden",
 		webPreferences: {
@@ -200,21 +200,21 @@ async function createWindow() {
 			webSecurity: !1,
 			sandbox: !1
 		}
-	}), f.isEmpty() || setTimeout(() => {
-		win && win.setIcon(f);
-	}, 500), win.webContents.session.setDisplayMediaRequestHandler((e, u) => {
+	}), m.isEmpty() || setTimeout(() => {
+		win && win.setIcon(m);
+	}, 500), win.webContents.session.setDisplayMediaRequestHandler((e, f) => {
 		desktopCapturer.getSources({ types: ["screen"] }).then((e) => {
-			e.length > 0 ? u({
+			e.length > 0 ? f({
 				video: e[0],
 				audio: "loopback"
-			}) : u(null);
+			}) : f(null);
 		});
 	}), win.webContents.on("did-finish-load", () => {
 		win?.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-	}), win.webContents.on("did-fail-load", (e, u, d, f) => {
-		console.error("Failed to load:", u, d, f);
-	}), win.webContents.on("console-message", (e, u, d) => {
-		console.log("Renderer console:", u, d);
+	}), win.webContents.on("did-fail-load", (e, f, p, m) => {
+		console.error("Failed to load:", f, p, m);
+	}), win.webContents.on("console-message", (e, f, p) => {
+		console.log("Renderer console:", f, p);
 	}), typeof MAIN_WINDOW_VITE_DEV_SERVER_URL < "u") console.log("Loading from Forge dev server:", MAIN_WINDOW_VITE_DEV_SERVER_URL), await win.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL), win.webContents.openDevTools();
 	else if (process.env.VITE_DEV_SERVER_URL) console.log("Loading from custom dev server:", process.env.VITE_DEV_SERVER_URL), await win.loadURL(process.env.VITE_DEV_SERVER_URL), win.webContents.openDevTools();
 	else {
@@ -222,8 +222,8 @@ async function createWindow() {
 		console.log("Loading from file:", e), console.log("Index.html exists:", fs.existsSync(e));
 		try {
 			await win.loadFile(e);
-		} catch (u) {
-			console.error("loadFile failed, trying loadURL:", u), await win.loadURL(`file://${e}`);
+		} catch (f) {
+			console.error("loadFile failed, trying loadURL:", f), await win.loadURL(`file://${e}`);
 		}
 	}
 }
@@ -244,7 +244,54 @@ app.whenReady().then(() => {
 				error: e.message
 			};
 		}
-	}), ipcMain.on("window-minimize", () => {
+	}), ipcMain.handle("save-file", async (e, { content: f, defaultPath: p }) => {
+		try {
+			let { canceled: e, filePath: m } = await dialog.showSaveDialog(win, {
+				defaultPath: p,
+				filters: [{
+					name: "JSON",
+					extensions: ["json"]
+				}]
+			});
+			return !e && m ? (fs.writeFileSync(m, f), {
+				success: !0,
+				filePath: m
+			}) : {
+				success: !1,
+				canceled: !0
+			};
+		} catch (e) {
+			return console.error("Save file error:", e), {
+				success: !1,
+				error: e.message
+			};
+		}
+	}), ipcMain.handle("select-directory", async () => {
+		try {
+			let { canceled: e, filePaths: f } = await dialog.showOpenDialog(win, { properties: ["openDirectory"] });
+			return !e && f.length > 0 ? {
+				success: !0,
+				path: f[0]
+			} : {
+				success: !1,
+				canceled: !0
+			};
+		} catch (e) {
+			return console.error("Select directory error:", e), {
+				success: !1,
+				error: e.message
+			};
+		}
+	}), ipcMain.handle("write-file-direct", async (e, { content: f, filePath: p }) => {
+		try {
+			return fs.writeFileSync(p, f), { success: !0 };
+		} catch (e) {
+			return console.error("Write file direct error:", e), {
+				success: !1,
+				error: e.message
+			};
+		}
+	}), ipcMain.handle("clipboard-write", async (e, f) => (clipboard.writeText(f), !0)), ipcMain.handle("clipboard-read", async () => clipboard.readText()), ipcMain.on("window-minimize", () => {
 		win?.minimize();
 	}), ipcMain.on("window-maximize", () => {
 		win?.isMaximized() ? win.unmaximize() : win?.maximize();

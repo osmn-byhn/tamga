@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, nativeImage, ipcMain, desktopCapturer } from "electron";
+import { app, BrowserWindow, Menu, nativeImage, ipcMain, desktopCapturer, dialog, clipboard } from "electron";
 import { updateIfNeeded } from "@osmn-byhn/changelog-github-updater";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -165,6 +165,58 @@ app.whenReady().then(() => {
       console.error("Update error:", error);
       return { success: false, error: error.message };
     }
+  });
+
+  ipcMain.handle('save-file', async (event, { content, defaultPath }) => {
+    try {
+      const { canceled, filePath } = await dialog.showSaveDialog(win, {
+        defaultPath,
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+      });
+      
+      if (!canceled && filePath) {
+        fs.writeFileSync(filePath, content);
+        return { success: true, filePath };
+      }
+      return { success: false, canceled: true };
+    } catch (error) {
+      console.error("Save file error:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('select-directory', async () => {
+    try {
+      const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+        properties: ['openDirectory']
+      });
+      if (!canceled && filePaths.length > 0) {
+        return { success: true, path: filePaths[0] };
+      }
+      return { success: false, canceled: true };
+    } catch (error) {
+      console.error("Select directory error:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('write-file-direct', async (event, { content, filePath }) => {
+    try {
+      fs.writeFileSync(filePath, content);
+      return { success: true };
+    } catch (error) {
+      console.error("Write file direct error:", error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('clipboard-write', async (event, text) => {
+    clipboard.writeText(text);
+    return true;
+  });
+
+  ipcMain.handle('clipboard-read', async () => {
+    return clipboard.readText();
   });
 
   // Window Controls
