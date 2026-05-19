@@ -28,7 +28,13 @@ import pkg from "../../package.json";
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { hasPassword, setMasterPassword, removeMasterPassword, unlock, exportData, importData } = useAuth();
-  const { hideSensitiveData, setHideSensitiveData, maskStyle, setMaskStyle } = useSettings();
+  const { 
+    hideSensitiveData, setHideSensitiveData, 
+    maskStyle, setMaskStyle,
+    maxFailedAttempts, setMaxFailedAttempts,
+    failedAction, setFailedAction,
+    backupPath, setBackupPath
+  } = useSettings();
 
   // Password Management State
   const [newPassword, setNewPassword] = useState("");
@@ -63,6 +69,17 @@ const Settings = () => {
     setNewPassword("");
     setConfirmPassword("");
     toast.success("Master password set successfully");
+  };
+
+  const handleSelectBackupDir = async () => {
+    if (!window.ipcRenderer) {
+      toast.error("Directory selection is only supported in the desktop app.");
+      return;
+    }
+    const result = await window.ipcRenderer.invoke('select-directory');
+    if (result.success && result.path) {
+      setBackupPath(result.path);
+    }
   };
 
   const handleRemovePassword = async (e) => {
@@ -484,6 +501,65 @@ const Settings = () => {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+            <CardHeader>
+              <CardTitle>Intruder Protection</CardTitle>
+              <CardDescription>
+                Automatically wipe the vault if someone tries to guess your master password.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6 max-w-md">
+                <div className="space-y-2">
+                  <Label>Maximum Failed Attempts</Label>
+                  <select 
+                    value={maxFailedAttempts}
+                    onChange={(e) => setMaxFailedAttempts(parseInt(e.target.value, 10))}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value={0}>Disabled</option>
+                    <option value={3}>3 Attempts</option>
+                    <option value={5}>5 Attempts</option>
+                    <option value={10}>10 Attempts</option>
+                  </select>
+                </div>
+                
+                {maxFailedAttempts > 0 && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <Label>Action on Failure</Label>
+                    <select
+                      value={failedAction}
+                      onChange={(e) => setFailedAction(e.target.value)}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="wipe">Delete All Data (Wipe Vault)</option>
+                      <option value="backup_wipe">Take Encrypted Backup, then Delete</option>
+                    </select>
+                    {failedAction === 'backup_wipe' && (
+                        <div className="pt-2 space-y-2">
+                          <Label>Default Backup Directory</Label>
+                          <div className="flex gap-2">
+                            <Input 
+                                value={backupPath} 
+                                readOnly 
+                                placeholder="Select a folder..." 
+                                className="flex-1 text-xs"
+                            />
+                            <Button onClick={handleSelectBackupDir} variant="outline">
+                                Browse
+                            </Button>
+                          </div>
+                          <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1">
+                              An encrypted raw backup file will be automatically saved here before data is wiped. If no directory is selected, you will be prompted to choose where to save during the emergency.
+                          </p>
+                        </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </section>

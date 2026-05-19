@@ -200,6 +200,64 @@ export function AuthProvider({ children }) {
         setEncryptionKey(null);
     };
 
+    const emergencyWipe = async (withBackup = false, backupPath = "") => {
+        if (withBackup) {
+            const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs", "tamga-recovery-codes", "tamga-salt", "tamga-validator"];
+            const rawData = {};
+            keysToExport.forEach(k => {
+                const val = localStorage.getItem(k);
+                if (val) rawData[k] = val;
+            });
+            
+            if (Object.keys(rawData).length > 0) {
+                const backupObj = {
+                    version: 2,
+                    isRawBackup: true,
+                    timestamp: Date.now(),
+                    data: rawData
+                };
+                
+                try {
+                    const filename = `tamga-emergency-backup-${new Date().toISOString().slice(0, 10)}.json`;
+                    
+                    if (window.ipcRenderer) {
+                        if (backupPath) {
+                            // Automatically save to the selected directory
+                            const separator = backupPath.includes('\\') ? '\\' : '/';
+                            const fullPath = backupPath.endsWith(separator) ? `${backupPath}${filename}` : `${backupPath}${separator}${filename}`;
+                            
+                            await window.ipcRenderer.invoke('write-file-direct', {
+                                content: JSON.stringify(backupObj),
+                                filePath: fullPath
+                            });
+                        } else {
+                            // Prompt user
+                            await window.ipcRenderer.invoke('save-file', {
+                                content: JSON.stringify(backupObj),
+                                defaultPath: filename
+                            });
+                        }
+                    } else {
+                        const blob = new Blob([JSON.stringify(backupObj)], { type: "application/json" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = defaultPath;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        // Wait briefly to ensure download triggers
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                } catch (e) {
+                    console.error("Failed to download emergency backup", e);
+                }
+            }
+        }
+        await removeMasterPassword();
+    };
+
     const lock = () => {
         if (hasPassword) {
             setIsLocked(true);
@@ -522,6 +580,7 @@ export function AuthProvider({ children }) {
             unlock,
             setMasterPassword,
             removeMasterPassword,
+            emergencyWipe,
             lock,
             getData,
             updateData,
