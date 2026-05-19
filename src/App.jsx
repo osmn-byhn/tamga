@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import { AuthProvider } from "./context/AuthContext";
 import LockScreen from "./components/LockScreen";
+import AutoLock from "./components/AutoLock";
 import RootLayout from "./components/RootLayout";
 import Envs from "./pages/Envs";
 import OtpCodes from "./pages/OtpCodes";
@@ -20,6 +21,7 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <SettingsProvider>
         <AuthProvider>
+          <AutoLock />
           <LockScreen />
           <HashRouter>
             <TitleBar />
