@@ -1,11 +1,25 @@
 import React from 'react';
 import { Minus, Square, X } from 'lucide-react';
 import { useLocation, Link } from "react-router-dom";
+import { Search } from 'lucide-react';
+import GlobalSearch from './GlobalSearch';
 
 const TitleBar = () => {
 
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
+  const [searchOpen, setSearchOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const down = (e) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
   const navItems = [
     { path: "/connections", icon: "bi-diagram-3-fill", label: "Connections" },
@@ -57,6 +71,14 @@ const TitleBar = () => {
 
       {/* Right Side: Window Controls */}
       <div className="flex items-center h-full relative z-50" style={{ WebkitAppRegion: 'no-drag' }}>
+        
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="relative group flex items-center gap-2 px-3 h-8 mr-1 rounded-lg transition-all duration-300 ease-out hover:bg-muted text-muted-foreground hover:text-foreground"
+          title="Search Vault (Cmd/Ctrl+K)"
+        >
+          <Search className="h-4 w-4 transition-transform duration-300 group-hover:scale-105" />
+        </button>
 
         {navItems.map((item) => (
           <Link
@@ -98,6 +120,8 @@ const TitleBar = () => {
           <X className="w-4 h-4 text-foreground/60 group-hover:text-current" />
         </button>
       </div>
+
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   );
 };
