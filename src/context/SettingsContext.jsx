@@ -11,6 +11,8 @@ const SettingsContext = createContext({
   setFailedAction: () => null,
   backupPath: "",
   setBackupPath: () => null,
+  autoLockTimeout: 5,
+  setAutoLockTimeout: () => null,
 });
 
 export function SettingsProvider({ children }) {
@@ -35,6 +37,11 @@ export function SettingsProvider({ children }) {
     return localStorage.getItem("tamga-backup-path") || "";
   });
 
+  const [autoLockTimeout, setAutoLockTimeout] = useState(() => {
+    const saved = localStorage.getItem("tamga-auto-lock-timeout");
+    return saved ? parseInt(saved, 10) : 5;
+  });
+
   useEffect(() => {
     localStorage.setItem("tamga-hide-sensitive", hideSensitiveData);
   }, [hideSensitiveData]);
@@ -55,13 +62,18 @@ export function SettingsProvider({ children }) {
     localStorage.setItem("tamga-backup-path", backupPath);
   }, [backupPath]);
 
+  useEffect(() => {
+    localStorage.setItem("tamga-auto-lock-timeout", autoLockTimeout);
+  }, [autoLockTimeout]);
+
   return (
     <SettingsContext.Provider value={{ 
       hideSensitiveData, setHideSensitiveData, 
       maskStyle, setMaskStyle,
       maxFailedAttempts, setMaxFailedAttempts,
       failedAction, setFailedAction,
-      backupPath, setBackupPath
+      backupPath, setBackupPath,
+      autoLockTimeout, setAutoLockTimeout
     }}>
       {children}
     </SettingsContext.Provider>

@@ -33,7 +33,8 @@ const Settings = () => {
     maskStyle, setMaskStyle,
     maxFailedAttempts, setMaxFailedAttempts,
     failedAction, setFailedAction,
-    backupPath, setBackupPath
+    backupPath, setBackupPath,
+    autoLockTimeout, setAutoLockTimeout
   } = useSettings();
 
   // Password Management State
@@ -501,6 +502,33 @@ const Settings = () => {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+            <CardHeader>
+              <CardTitle>Auto-Lock</CardTitle>
+              <CardDescription>
+                Automatically lock the application after a period of inactivity.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label>Inactivity Timeout</Label>
+                  <select 
+                    value={autoLockTimeout}
+                    onChange={(e) => setAutoLockTimeout(parseInt(e.target.value, 10))}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value={0}>Disabled</option>
+                    <option value={1}>1 Minute</option>
+                    <option value={5}>5 Minutes</option>
+                    <option value={15}>15 Minutes</option>
+                    <option value={30}>30 Minutes</option>
+                  </select>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
