@@ -166,6 +166,13 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const logoutSession = () => {
+        setActiveSession(null);
+        setEncryptionKey(null);
+        setHasPassword(false);
+        setIsLocked(false);
+    };
+
     const createSession = (name, photo) => {
         const newSession = { id: Date.now().toString(), name, photo };
         const updated = [...sessions, newSession];
@@ -606,6 +613,7 @@ export function AuthProvider({ children }) {
             activeSession,
             selectSession,
             createSession,
+            logoutSession,
             isLocked,
             hasPassword,
             unlock,

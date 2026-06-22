@@ -1,14 +1,15 @@
 import React from 'react';
-import { Minus, Square, X } from 'lucide-react';
+import { Minus, Square, X, Search, LogOut, User } from 'lucide-react';
 import { useLocation, Link } from "react-router-dom";
-import { Search } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
+import { useAuth } from '../context/AuthContext';
 
 const TitleBar = () => {
 
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const { activeSession, logoutSession } = useAuth();
 
   React.useEffect(() => {
     const down = (e) => {
@@ -73,6 +74,21 @@ const TitleBar = () => {
       {/* Right Side: Window Controls */}
       <div className="flex items-center h-full relative z-50" style={{ WebkitAppRegion: 'no-drag' }}>
         
+        {activeSession && (
+          <button
+            onClick={logoutSession}
+            className="relative group flex items-center gap-2 px-3 h-8 mr-1 rounded-lg transition-all duration-300 ease-out hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+            title="Switch Session"
+          >
+            {activeSession.photo ? (
+              <img src={activeSession.photo} alt="Profile" className="w-5 h-5 rounded-full object-cover shadow-sm" />
+            ) : (
+              <User className="h-4 w-4" />
+            )}
+            <LogOut className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 absolute right-1 bg-background/80 rounded-full" />
+          </button>
+        )}
+
         <button
           onClick={() => setSearchOpen(true)}
           className="relative group flex items-center gap-2 px-3 h-8 mr-1 rounded-lg transition-all duration-300 ease-out hover:bg-muted text-muted-foreground hover:text-foreground"
