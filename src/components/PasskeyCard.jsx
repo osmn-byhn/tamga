@@ -29,7 +29,7 @@ const PasskeyCard = ({ passkey, onDelete, onUpdate, dragHandleProps, isGroupingT
                 >
                     <GripVertical className="h-4 w-4" />
                 </div>
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-4">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
                             <div className="p-2 rounded-full bg-purple-500/10 text-purple-500 overflow-hidden">
@@ -57,7 +57,7 @@ const PasskeyCard = ({ passkey, onDelete, onUpdate, dragHandleProps, isGroupingT
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-row flex-wrap items-center justify-end gap-1 pt-2 border-t border-border/50">
                         {passkey.links?.length > 0 && (
                             <Link to={`/details/passkey/${passkey.id}`}>
                                 <Button
