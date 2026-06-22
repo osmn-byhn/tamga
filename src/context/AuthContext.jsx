@@ -2,6 +2,10 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 import { toast } from "sonner";
 
 const AuthContext = createContext({
+    sessions: [],
+    activeSession: null,
+    selectSession: () => {},
+    createSession: () => {},
     isLocked: false,
     hasPassword: false,
     unlock: (password) => Promise.resolve(false),
@@ -15,50 +19,44 @@ const AuthContext = createContext({
 });
 
 export function AuthProvider({ children }) {
+    const [sessions, setSessions] = useState([]);
+    const [activeSession, setActiveSession] = useState(null);
     const [isLocked, setIsLocked] = useState(false);
     const [hasPassword, setHasPassword] = useState(false);
     const [encryptionKey, setEncryptionKey] = useState(null);
 
     useEffect(() => {
-        // 1. One-time Migration from Sphinx to Tamga
-        const keysToMigrate = [
-            { old: "sphinx-salt", new: "tamga-salt" },
-            { old: "sphinx-validator", new: "tamga-validator" },
-            { old: "otp-auth-uris", new: "tamga-otp-uris" },
-            { old: "sphinx-passwords", new: "tamga-passwords" },
-            { old: "sphinx-passkeys", new: "tamga-passkeys" },
-            { old: "sphinx-envs", new: "tamga-envs" }
-        ];
-
-        let migrated = false;
-        keysToMigrate.forEach(({ old, new: newKey }) => {
-            const data = localStorage.getItem(old);
-            if (data && !localStorage.getItem(newKey)) {
-                localStorage.setItem(newKey, data);
-                // We keep old data for safety for now, or remove it?
-                // Let's remove it to avoid confusion after successful move.
-                localStorage.removeItem(old);
-                migrated = true;
-            }
-        });
-
-        if (migrated) {
-            console.log("Data migrated to Tamga successfully");
-        }
-
-        // 2. Check if secure storage is initialized
-        const salt = localStorage.getItem("tamga-salt");
-        const validator = localStorage.getItem("tamga-validator");
-
-        if (salt && validator) {
-            setHasPassword(true);
-            setIsLocked(true);
+        // Migration to Sessions
+        const loadedSessionsStr = localStorage.getItem("tamga-sessions");
+        let loadedSessions = [];
+        
+        if (loadedSessionsStr) {
+            loadedSessions = JSON.parse(loadedSessionsStr);
         } else {
-            // Nuke any remnants
-            localStorage.removeItem("sphinx-app-lock");
-            setHasPassword(false);
-            setIsLocked(false);
+            const oldSalt = localStorage.getItem(`${activeSession?.id}-tamga-salt`);
+            if (oldSalt) {
+                const defaultSession = { id: "default", name: "Main Profile", photo: null };
+                loadedSessions = [defaultSession];
+                localStorage.setItem("tamga-sessions", JSON.stringify(loadedSessions));
+                
+                const keysToMigrate = [
+                    "tamga-salt", "tamga-validator", "tamga-otp-uris", 
+                    "tamga-passwords", "tamga-passkeys", "tamga-envs", "tamga-recovery-codes",
+                    "tamga-hide-sensitive", "tamga-mask-style", "tamga-max-failed-attempts",
+                    "tamga-failed-action", "tamga-backup-path", "tamga-auto-lock-timeout",
+                    "tamga-failed-attempts-count"
+                ];
+                keysToMigrate.forEach(k => {
+                    const val = localStorage.getItem(k);
+                    if (val !== null) {
+                        localStorage.setItem(`default-${k}`, val);
+                        localStorage.removeItem(k);
+                    }
+                });
+            }
         }
+        
+        setSessions(loadedSessions);
     }, []);
 
     // Crypto Utilities
@@ -151,6 +149,31 @@ export function AuthProvider({ children }) {
         }
     };
 
+    // Session Actions
+    const selectSession = (sessionId) => {
+        const session = sessions.find(s => s.id === sessionId);
+        if (session) {
+            setActiveSession(session);
+            const salt = localStorage.getItem(`${sessionId}-tamga-salt`);
+            const validator = localStorage.getItem(`${sessionId}-tamga-validator`);
+            if (salt && validator) {
+                setHasPassword(true);
+                setIsLocked(true);
+            } else {
+                setHasPassword(false);
+                setIsLocked(false);
+            }
+        }
+    };
+
+    const createSession = (name, photo) => {
+        const newSession = { id: Date.now().toString(), name, photo };
+        const updated = [...sessions, newSession];
+        setSessions(updated);
+        localStorage.setItem("tamga-sessions", JSON.stringify(updated));
+        selectSession(newSession.id);
+    };
+
     // Auth Actions
     const setMasterPassword = async (password) => {
         const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -161,8 +184,8 @@ export function AuthProvider({ children }) {
         const encryptedValidator = await encryptData(validatorToken, key);
 
         // Save auth data
-        localStorage.setItem("tamga-salt", JSON.stringify(Array.from(salt)));
-        localStorage.setItem("tamga-validator", encryptedValidator);
+        localStorage.setItem(`${activeSession.id}-tamga-salt`, JSON.stringify(Array.from(salt)));
+        localStorage.setItem(`${activeSession.id}-tamga-validator`, encryptedValidator);
 
         setEncryptionKey(key);
         setHasPassword(true);
@@ -171,8 +194,8 @@ export function AuthProvider({ children }) {
 
     const unlock = async (password) => {
         try {
-            const saltJson = localStorage.getItem("tamga-salt");
-            const encryptedValidator = localStorage.getItem("tamga-validator");
+            const saltJson = localStorage.getItem(`${activeSession?.id}-tamga-salt`);
+            const encryptedValidator = localStorage.getItem(`${activeSession?.id}-tamga-validator`);
 
             if (!saltJson || !encryptedValidator) return true; // Should ideally be handled
 
@@ -194,7 +217,11 @@ export function AuthProvider({ children }) {
     };
 
     const removeMasterPassword = async () => {
-        localStorage.clear(); // Nuclear option for security reset
+        // Clear only active session data
+        if(activeSession) {
+            const keysToRemove = [`${activeSession.id}-tamga-otp-uris`, `${activeSession.id}-tamga-passwords`, `${activeSession.id}-tamga-passkeys`, `${activeSession.id}-tamga-envs`, `${activeSession.id}-tamga-recovery-codes`, `${activeSession.id}-tamga-salt`, `${activeSession.id}-tamga-validator`];
+            keysToRemove.forEach(k => localStorage.removeItem(k));
+        }
         setHasPassword(false);
         setIsLocked(false);
         setEncryptionKey(null);
@@ -202,7 +229,7 @@ export function AuthProvider({ children }) {
 
     const emergencyWipe = async (withBackup = false, backupPath = "") => {
         if (withBackup) {
-            const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs", "tamga-recovery-codes", "tamga-salt", "tamga-validator"];
+            const keysToExport = [`${activeSession.id}-tamga-otp-uris`, `${activeSession.id}-tamga-passwords`, `${activeSession.id}-tamga-passkeys`, `${activeSession.id}-tamga-envs`, `${activeSession.id}-tamga-recovery-codes`, `${activeSession.id}-tamga-salt`, `${activeSession.id}-tamga-validator`];
             const rawData = {};
             keysToExport.forEach(k => {
                 const val = localStorage.getItem(k);
@@ -289,11 +316,11 @@ export function AuthProvider({ children }) {
 
     const getAllVaultItems = useCallback(async () => {
         const keys = [
-            { key: 'tamga-passwords', type: 'password' },
-            { key: 'tamga-otp-uris', type: 'otp' },
-            { key: 'tamga-envs', type: 'env' },
-            { key: 'tamga-passkeys', type: 'passkey' },
-            { key: 'tamga-recovery-codes', type: 'recovery' }
+            { key: `${activeSession.id}-tamga-passwords`, type: 'password' },
+            { key: `${activeSession.id}-tamga-otp-uris`, type: 'otp' },
+            { key: `${activeSession.id}-tamga-envs`, type: 'env' },
+            { key: `${activeSession.id}-tamga-passkeys`, type: 'passkey' },
+            { key: `${activeSession.id}-tamga-recovery-codes`, type: 'recovery' }
         ];
         
         const results = [];
@@ -309,11 +336,11 @@ export function AuthProvider({ children }) {
         
         const getSKey = (t) => {
             switch(t) {
-                case 'password': return 'tamga-passwords';
-                case 'otp': return 'tamga-otp-uris';
-                case 'env': return 'tamga-envs';
-                case 'passkey': return 'tamga-passkeys';
-                case 'recovery': return 'tamga-recovery-codes';
+                case 'password': return `${activeSession.id}-tamga-passwords`;
+                case 'otp': return `${activeSession.id}-tamga-otp-uris`;
+                case 'env': return `${activeSession.id}-tamga-envs`;
+                case 'passkey': return `${activeSession.id}-tamga-passkeys`;
+                case 'recovery': return `${activeSession.id}-tamga-recovery-codes`;
                 default: return null;
             }
         };
@@ -353,7 +380,7 @@ export function AuthProvider({ children }) {
     }, [getData, updateData]);
 
     const removeGlobalLink = useCallback(async (type, id) => {
-        const keys = ['tamga-passwords', 'tamga-otp-uris', 'tamga-envs', 'tamga-passkeys', 'tamga-recovery-codes'];
+        const keys = [`${activeSession.id}-tamga-passwords`, `${activeSession.id}-tamga-otp-uris`, `${activeSession.id}-tamga-envs`, `${activeSession.id}-tamga-passkeys`, `${activeSession.id}-tamga-recovery-codes`];
         for (const key of keys) {
             const items = await getData(key) || [];
             let changed = false;
@@ -374,10 +401,10 @@ export function AuthProvider({ children }) {
     const exportData = async () => {
         if (!encryptionKey) return null;
 
-        const saltJson = localStorage.getItem("tamga-salt");
+        const saltJson = localStorage.getItem(`${activeSession?.id}-tamga-salt`);
         if (!saltJson) return null;
 
-        const keysToExport = ["tamga-otp-uris", "tamga-passwords", "tamga-passkeys", "tamga-envs", "tamga-recovery-codes"];
+        const keysToExport = [`${activeSession.id}-tamga-otp-uris`, `${activeSession.id}-tamga-passwords`, `${activeSession.id}-tamga-passkeys`, `${activeSession.id}-tamga-envs`, `${activeSession.id}-tamga-recovery-codes`];
         const exportObj = {
             version: 2, // Increment version
             timestamp: Date.now(),
@@ -466,8 +493,8 @@ export function AuthProvider({ children }) {
                 const validatorToken = "tamga-valid-token";
                 const encryptedValidator = await encryptData(validatorToken, derivedKey);
 
-                localStorage.setItem("tamga-salt", JSON.stringify(Array.from(saltArray)));
-                localStorage.setItem("tamga-validator", encryptedValidator);
+                localStorage.setItem(`${activeSession.id}-tamga-salt`, JSON.stringify(Array.from(saltArray)));
+                localStorage.setItem(`${activeSession.id}-tamga-validator`, encryptedValidator);
 
                 setEncryptionKey(derivedKey);
                 setHasPassword(true);
@@ -519,25 +546,25 @@ export function AuthProvider({ children }) {
                 for (const item of incomingValue) {
                     let isDuplicate = false;
 
-                    if (key === "tamga-otp-uris") {
+                    if (key.includes("tamga-otp-uris")) {
                         isDuplicate = localValue.includes(item);
-                    } else if (key === "tamga-passwords") {
+                    } else if (key.includes("tamga-passwords")) {
                         isDuplicate = localValue.some(p =>
                             p.platform === item.platform &&
                             p.username === item.username &&
                             p.value === item.value
                         );
-                    } else if (key === "tamga-envs") {
+                    } else if (key.includes("tamga-envs")) {
                         isDuplicate = localValue.some(e =>
                             e.projectName === item.projectName &&
                             e.content === item.content
                         );
-                    } else if (key === "tamga-passkeys") {
+                    } else if (key.includes("tamga-passkeys")) {
                         isDuplicate = localValue.some(pk =>
                             pk.label === item.label &&
                             pk.secret === item.secret
                         );
-                    } else if (key === "tamga-recovery-codes") {
+                    } else if (key.includes("tamga-recovery-codes")) {
                         isDuplicate = localValue.some(rc =>
                             rc.label === item.label &&
                             rc.codes === item.codes
@@ -575,6 +602,10 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={{
+            sessions,
+            activeSession,
+            selectSession,
+            createSession,
             isLocked,
             hasPassword,
             unlock,

@@ -1,6 +1,6 @@
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import LockScreen from "./components/LockScreen";
 import AutoLock from "./components/AutoLock";
 import RootLayout from "./components/RootLayout";
@@ -14,34 +14,47 @@ import GraphView from "./pages/GraphView";
 import PasswordHealth from "./pages/PasswordHealth";
 import RecoveryCodes from "./pages/RecoveryCodes";
 import TitleBar from "./components/TitleBar";
+import SessionSelection from "./components/SessionSelection";
 
 import { SettingsProvider } from "./context/SettingsContext";
+
+function MainApp() {
+  const { activeSession } = useAuth();
+  
+  if (!activeSession) {
+    return <SessionSelection />;
+  }
+
+  return (
+    <SettingsProvider key={activeSession.id}>
+      <AutoLock />
+      <LockScreen />
+      <HashRouter>
+        <TitleBar />
+        <Routes>
+          <Route path="/" element={<RootLayout />}>
+            <Route index element={<Passwords />} />
+            <Route path="env-files" element={<Envs />} />
+            <Route path="otps" element={<OtpCodes />} />
+            <Route path="backup-codes" element={<Passkeys />} />
+            <Route path="recovery-codes" element={<RecoveryCodes />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="health" element={<PasswordHealth />} />
+            <Route path="details/:type/:id" element={<ItemDetail />} />
+            <Route path="connections" element={<GraphView />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </SettingsProvider>
+  );
+}
 
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      <SettingsProvider>
-        <AuthProvider>
-          <AutoLock />
-          <LockScreen />
-          <HashRouter>
-            <TitleBar />
-            <Routes>
-              <Route path="/" element={<RootLayout />}>
-                <Route index element={<Passwords />} />
-                <Route path="env-files" element={<Envs />} />
-                <Route path="otps" element={<OtpCodes />} />
-                <Route path="backup-codes" element={<Passkeys />} />
-                <Route path="recovery-codes" element={<RecoveryCodes />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="health" element={<PasswordHealth />} />
-                <Route path="details/:type/:id" element={<ItemDetail />} />
-                <Route path="connections" element={<GraphView />} />
-              </Route>
-            </Routes>
-          </HashRouter>
-        </AuthProvider>
-      </SettingsProvider>
+      <AuthProvider>
+        <MainApp />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
