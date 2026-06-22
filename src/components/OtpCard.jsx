@@ -10,6 +10,8 @@ import { useSettings } from "@/context/SettingsContext";
 import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 import { toast } from "sonner";
+import TransferSessionDialog from "./TransferSessionDialog";
+import { Send } from "lucide-react";
 import * as OTPAuth from "otpauth";
 
 const OtpCard = ({ otpItem, onDelete, onUpdate, dragHandleProps, isGroupingTarget }) => {

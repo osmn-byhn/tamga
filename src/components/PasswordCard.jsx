@@ -4,6 +4,8 @@ import { Eye, EyeOff, Pencil, Copy, Trash2, ExternalLink, GripVertical, Shield, 
 import { Link } from "react-router-dom";
 import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import { toast } from "sonner";
+import TransferSessionDialog from "./TransferSessionDialog";
+import { Send } from "lucide-react";
 import EditPasswordDialog from "./EditPasswordDialog";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { useSettings } from "@/context/SettingsContext";
@@ -110,6 +112,20 @@ const PasswordCard = ({ item, onUpdate, onDelete, dragHandleProps, isGroupingTar
           >
             <Copy className="h-4 w-4" />
           </Button>
+
+          {onDelete && (
+            <TransferSessionDialog item={item} storeKey="tamga-passwords" onDelete={onDelete}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-purple-600/70 hover:text-purple-600 hover:bg-purple-600/10"
+                title="Transfer to Session"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </TransferSessionDialog>
+          )}
+          
           {onDelete && (
             <DeleteConfirmDialog onConfirm={() => onDelete(item.id)}>
                 <Button

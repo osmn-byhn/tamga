@@ -7,6 +7,8 @@ import DeleteConfirmDialog from "./DeleteConfirmDialog";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/SettingsContext";
 import { toast } from "sonner";
+import TransferSessionDialog from "./TransferSessionDialog";
+import { Send } from "lucide-react";
 import { cn, getFaviconUrl, copyToClipboard } from "@/lib/utils";
 import CensoredText from "./CensoredText";
 import {

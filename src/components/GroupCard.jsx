@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Folder, ChevronRight, ChevronDown, GripVertical, Pencil, Trash2, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import TransferSessionDialog from "./TransferSessionDialog";
+import { Send } from "lucide-react";
 
 const GroupCard = ({ 
     group, 
@@ -12,7 +14,8 @@ const GroupCard = ({
     onUngroup,
     children, 
     dragHandleProps,
-    isGroupingTarget 
+    isGroupingTarget,
+    storeKey 
 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const groupColor = group.color || "#3b82f6";
@@ -69,6 +72,19 @@ const GroupCard = ({
                             >
                                 <Pencil className="h-4 w-4" />
                             </Button>
+
+                            {onDelete && storeKey && (
+                                <TransferSessionDialog item={group} storeKey={storeKey} onDelete={onDelete}>
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="text-muted-foreground hover:text-purple-500 hover:bg-purple-500/10"
+                                        title="Transfer Group to Session"
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </Button>
+                                </TransferSessionDialog>
+                            )}
                             <DeleteConfirmDialog 
                                 onConfirm={() => onDelete(group.id)}
                                 title="Delete Group?"

@@ -2,6 +2,11 @@
   <img src="public/tamga.png" alt="Tamga Logo" width="150" />
 </div>
 
+<div align="center">
+  <img src="https://img.shields.io/github/downloads/osmn-byhn/tamga/total?style=for-the-badge&color=purple&label=Release%20Downloads" alt="Release Downloads" />
+  <img src="https://komarev.com/ghpvc/?username=osmn-byhn-tamga-repo&label=Views&color=blue&style=for-the-badge" alt="Total Views" />
+</div>
+
 # Tamga Vault
 **Tamga** is a modern, comprehensive digital vault and security management platform designed specifically for developers and privacy-conscious users. It features a robust **local-first** and **zero-knowledge** architecture.
 
