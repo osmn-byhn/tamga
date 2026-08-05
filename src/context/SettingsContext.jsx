@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
 
 const SettingsContext = createContext({
   hideSensitiveData: false,
@@ -16,54 +17,56 @@ const SettingsContext = createContext({
 });
 
 export function SettingsProvider({ children }) {
+  const { activeSession } = useAuth();
+  const prefix = activeSession ? `${activeSession.id}-tamga` : 'tamga';
   const [hideSensitiveData, setHideSensitiveData] = useState(() => {
-    return localStorage.getItem("tamga-hide-sensitive") === "true";
+    return localStorage.getItem(`${prefix}-hide-sensitive`) === "true";
   });
 
   const [maskStyle, setMaskStyle] = useState(() => {
-    return localStorage.getItem("tamga-mask-style") || "blur";
+    return localStorage.getItem(`${prefix}-mask-style`) || "blur";
   });
 
   const [maxFailedAttempts, setMaxFailedAttempts] = useState(() => {
-    const saved = localStorage.getItem("tamga-max-failed-attempts");
+    const saved = localStorage.getItem(`${prefix}-max-failed-attempts`);
     return saved ? parseInt(saved, 10) : 0;
   });
 
   const [failedAction, setFailedAction] = useState(() => {
-    return localStorage.getItem("tamga-failed-action") || "wipe";
+    return localStorage.getItem(`${prefix}-failed-action`) || "wipe";
   });
 
   const [backupPath, setBackupPath] = useState(() => {
-    return localStorage.getItem("tamga-backup-path") || "";
+    return localStorage.getItem(`${prefix}-backup-path`) || "";
   });
 
   const [autoLockTimeout, setAutoLockTimeout] = useState(() => {
-    const saved = localStorage.getItem("tamga-auto-lock-timeout");
+    const saved = localStorage.getItem(`${prefix}-auto-lock-timeout`);
     return saved ? parseInt(saved, 10) : 5;
   });
 
   useEffect(() => {
-    localStorage.setItem("tamga-hide-sensitive", hideSensitiveData);
+    localStorage.setItem(`${prefix}-hide-sensitive`, hideSensitiveData);
   }, [hideSensitiveData]);
 
   useEffect(() => {
-    localStorage.setItem("tamga-mask-style", maskStyle);
+    localStorage.setItem(`${prefix}-mask-style`, maskStyle);
   }, [maskStyle]);
 
   useEffect(() => {
-    localStorage.setItem("tamga-max-failed-attempts", maxFailedAttempts);
+    localStorage.setItem(`${prefix}-max-failed-attempts`, maxFailedAttempts);
   }, [maxFailedAttempts]);
 
   useEffect(() => {
-    localStorage.setItem("tamga-failed-action", failedAction);
+    localStorage.setItem(`${prefix}-failed-action`, failedAction);
   }, [failedAction]);
 
   useEffect(() => {
-    localStorage.setItem("tamga-backup-path", backupPath);
+    localStorage.setItem(`${prefix}-backup-path`, backupPath);
   }, [backupPath]);
 
   useEffect(() => {
-    localStorage.setItem("tamga-auto-lock-timeout", autoLockTimeout);
+    localStorage.setItem(`${prefix}-auto-lock-timeout`, autoLockTimeout);
   }, [autoLockTimeout]);
 
   return (

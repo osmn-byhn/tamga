@@ -102,7 +102,7 @@ const Envs = () => {
     // Added links
     const added = newLinks.filter(nl => !oldLinks.some(ol => ol.type === nl.type && String(ol.id) === String(nl.id)));
     for (const link of added) {
-      const sKey = link.type === 'password' ? 'tamga-passwords' : 
+      const sKey = link.type === 'password' ? 'tamga-passwords' :
                    link.type === 'otp' ? 'tamga-otp-uris' :
                    link.type === 'env' ? 'tamga-envs' :
                    'tamga-passkeys';
@@ -122,7 +122,7 @@ const Envs = () => {
     // Removed links
     const removed = oldLinks.filter(ol => !newLinks.some(nl => nl.type === ol.type && String(nl.id) === String(ol.id)));
     for (const link of removed) {
-      const sKey = link.type === 'password' ? 'tamga-passwords' : 
+      const sKey = link.type === 'password' ? 'tamga-passwords' :
                    link.type === 'otp' ? 'tamga-otp-uris' :
                    link.type === 'env' ? 'tamga-envs' :
                    'tamga-passkeys';
@@ -173,8 +173,8 @@ const Envs = () => {
     setCombineTargetId(null);
 
     if (over && active.id !== over.id) {
-       const isCombine = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5; 
-       
+       const isCombine = isShiftPressed.current && collisions && collisions.length > 0 && collisions[0].data?.value > 0.5;
+
        if (isCombine) {
          setEnvItems((items) => {
            let overItem = items.find(i => String(i.id) === String(over.id));
@@ -192,7 +192,7 @@ const Envs = () => {
                }
              }
            }
-           
+
            const activeItem = items.find(i => String(i.id) === String(active.id));
            if (!activeItem || !overItem) return items;
 
@@ -330,8 +330,8 @@ const Envs = () => {
                 {envItems.map((item) => (
                   <SortableItem key={item.id} id={item.id}>
                     {item.type === 'group' ? (
-                        <GroupCard 
-                            group={item} 
+                        <GroupCard
+                            group={item}
                             onDelete={onDeleteGroup}
                             onRename={(id, name, color) => setRenameGroupData({ id, name, color })}
                             onUngroup={onUngroup}
@@ -339,9 +339,9 @@ const Envs = () => {
                         >
                             <div className="space-y-4">
                                 {(item.items || []).map(nestedItem => (
-                                    <EnvCard 
-                                        key={nestedItem.id} 
-                                        envItem={nestedItem} 
+                                    <EnvCard
+                                        key={nestedItem.id}
+                                        envItem={nestedItem}
                                         onDelete={(id) => handleDeleteNestedEnv(item.id, id)}
                                         onUpdate={(id, data) => handleUpdateNestedEnv(item.id, id, data)}
                                         isGroupingTarget={combineTargetId === nestedItem.id}
@@ -365,9 +365,9 @@ const Envs = () => {
         )}
       </div>
       <Toaster />
-      
+
       {renameGroupData && (
-        <RenameGroupDialog 
+        <RenameGroupDialog
           isOpen={!!renameGroupData}
           onClose={(isConfirmed) => {
             if (renameGroupData?.isJustCreated && !isConfirmed) {

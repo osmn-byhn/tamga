@@ -56,6 +56,48 @@ const Settings = () => {
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
   const [showAboutDialog, setShowAboutDialog] = useState(false);
 
+  const [passwordPromptOpen, setPasswordPromptOpen] = useState(false);
+  const [promptPassword, setPromptPassword] = useState("");
+  const [pendingSettingCallback, setPendingSettingCallback] = useState(null);
+  const [localAutoLockTimeout, setLocalAutoLockTimeout] = useState(autoLockTimeout);
+
+  React.useEffect(() => {
+    setLocalAutoLockTimeout(autoLockTimeout);
+  }, [autoLockTimeout]);
+
+  const requirePasswordForSetting = (callback) => {
+    if (!hasPassword) {
+      callback();
+      return;
+    }
+    setPendingSettingCallback(() => callback);
+    setPasswordPromptOpen(true);
+    setPromptPassword("");
+  };
+
+  const handleConfirmSetting = async (e) => {
+    if (e) e.preventDefault();
+    if (!promptPassword) return;
+    const isValid = await unlock(promptPassword);
+    if (!isValid) {
+      toast.error("Incorrect master password");
+      return;
+    }
+    setPasswordPromptOpen(false);
+    if (pendingSettingCallback) {
+      pendingSettingCallback();
+      setPendingSettingCallback(null);
+    }
+    toast.success("Setting updated successfully");
+  };
+
+  const handleCancelSetting = () => {
+    setPasswordPromptOpen(false);
+    setPendingSettingCallback(null);
+    setLocalAutoLockTimeout(autoLockTimeout);
+  };
+
+
   const handleSetPassword = async (e) => {
     e.preventDefault();
     if (newPassword.length < 4) {
@@ -80,7 +122,7 @@ const Settings = () => {
     }
     const result = await window.ipcRenderer.invoke('select-directory');
     if (result.success && result.path) {
-      setBackupPath(result.path);
+      requirePasswordForSetting(() => setBackupPath(result.path));
     }
   };
 
@@ -266,7 +308,7 @@ const Settings = () => {
               <div className="space-y-6">
                 <Button
                   variant={hideSensitiveData ? "default" : "outline"}
-                  onClick={() => setHideSensitiveData(!hideSensitiveData)}
+                  onClick={() => requirePasswordForSetting(() => setHideSensitiveData(!hideSensitiveData))}
                   className={`flex items-center gap-3 h-12 px-6 transition-all duration-300 ${hideSensitiveData ? "bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/20" : ""}`}
                 >
                   {hideSensitiveData ? (
@@ -288,7 +330,7 @@ const Settings = () => {
                       <Label className="text-sm font-semibold mb-1.5 block">Censorship Style</Label>
                       <p className="text-xs text-muted-foreground mb-4">Choose how sensitive data is hidden when Privacy Mode is active.</p>
                     </div>
-                    <Tabs value={maskStyle} onValueChange={setMaskStyle} className="w-full max-w-md">
+                    <Tabs value={maskStyle} onValueChange={(val) => requirePasswordForSetting(() => setMaskStyle(val))} className="w-full max-w-md">
                       <TabsList className="grid w-full grid-cols-3 h-12">
                         <TabsTrigger value="blur" className="flex items-center gap-2">
                           <EyeOff className="h-4 w-4" /> Blur
@@ -522,7 +564,7 @@ const Settings = () => {
                   </div>
                   <Button 
                     variant={autoLockTimeout > 0 ? "default" : "outline"} 
-                    onClick={() => setAutoLockTimeout(autoLockTimeout > 0 ? 0 : 5)}
+                    onClick={() => requirePasswordForSetting(() => setAutoLockTimeout(autoLockTimeout > 0 ? 0 : 5))}
                     className={autoLockTimeout > 0 ? "bg-purple-600 hover:bg-purple-700 shadow-md shadow-purple-500/20 text-white" : ""}
                   >
                     {autoLockTimeout > 0 ? "Enabled" : "Disabled"}
@@ -538,11 +580,12 @@ const Settings = () => {
                       </span>
                     </div>
                     <Slider 
-                      value={[autoLockTimeout]} 
+                      value={[localAutoLockTimeout]} 
                       min={1} 
                       max={60} 
                       step={1} 
-                      onValueChange={(vals) => setAutoLockTimeout(vals[0])}
+                      onValueChange={(vals) => setLocalAutoLockTimeout(vals[0])}
+                      onValueCommit={(vals) => requirePasswordForSetting(() => setAutoLockTimeout(vals[0]))}
                       className="w-full py-2"
                     />
                     <div className="flex justify-between text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
@@ -569,7 +612,7 @@ const Settings = () => {
                   <Label>Maximum Failed Attempts</Label>
                   <select 
                     value={maxFailedAttempts}
-                    onChange={(e) => setMaxFailedAttempts(parseInt(e.target.value, 10))}
+                    onChange={(e) => { const v = parseInt(e.target.value, 10); requirePasswordForSetting(() => setMaxFailedAttempts(v)); }}
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value={0}>Disabled</option>
@@ -584,7 +627,7 @@ const Settings = () => {
                     <Label>Action on Failure</Label>
                     <select
                       value={failedAction}
-                      onChange={(e) => setFailedAction(e.target.value)}
+                      onChange={(e) => { const v = e.target.value; requirePasswordForSetting(() => setFailedAction(v)); }}
                       className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="wipe">Delete All Data (Wipe Vault)</option>
@@ -756,7 +799,41 @@ const Settings = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      
+        {/* Settings Password Prompt Dialog */}
+        <Dialog open={passwordPromptOpen} onOpenChange={(open) => !open && handleCancelSetting()}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-purple-600" />
+                Authentication Required
+              </DialogTitle>
+              <DialogDescription>
+                Please enter your master password to change this setting.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleConfirmSetting} className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Input
+                  type="password"
+                  placeholder="Master Password"
+                  value={promptPassword}
+                  onChange={(e) => setPromptPassword(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="ghost" onClick={handleCancelSetting}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
+                  Confirm
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+</div>
 
     </div>
   );

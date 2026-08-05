@@ -592,7 +592,8 @@ export default function Passwords() {
                         <SortableItem key={item.id} id={item.id}>
                           {item.type === 'group' ? (
                             <GroupCard 
-                              group={item} 
+                              group={item}
+                              storeKey="tamga-passwords" 
                               onDelete={onDeleteGroup}
                               onRename={(id, name, color) => setRenameGroupData({ id, name, color })}
                               onUngroup={onUngroup}
