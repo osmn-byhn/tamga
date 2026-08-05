@@ -6,22 +6,53 @@ yarn-debug.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Build artifacts
+# Dependencies
 node_modules
+
+# Build artifacts
 dist
 dist-electron
+.vite
 release
 out
-# .vite (Electron Forge plugin-vite paketleme işlemi için .gitignore'da OLMAMASI gerekiyor)
 *.local
+
+# Electron Builder
+*.blockmap
+builder-debug.yml
+builder-effective-config.yaml
+latest*.yml
+
+# One-off dev / patch scripts (local tooling only)
+add_debug.cjs
+fix_transfer.cjs
+modify.cjs
+patch_cards.cjs
+patch_settings.cjs
+update_contexts.cjs
+update_contexts2.cjs
+test_transfer.js
+test_build/
+
+# Environment
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# OS / misc
+*.tmp
+*.temp
+.cache
+coverage
