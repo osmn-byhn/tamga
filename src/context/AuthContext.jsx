@@ -462,6 +462,29 @@ export function AuthProvider({ children }) {
         });
     };
 
+    // Backup storage keys include the profile ID of the device that created them.
+    // Map known vault keys to the current profile when restoring on another device.
+    const normalizeImportedData = (data) => {
+        const portableKeys = [
+            "tamga-otp-uris",
+            "tamga-passwords",
+            "tamga-passkeys",
+            "tamga-envs",
+            "tamga-recovery-codes",
+        ];
+        const normalized = {};
+
+        for (const [key, value] of Object.entries(data || {})) {
+            const portableKey = portableKeys.find((suffix) => key === suffix || key.endsWith(`-${suffix}`));
+            const targetKey = portableKey && activeSession
+                ? `${activeSession.id}-${portableKey}`
+                : key;
+            normalized[targetKey] = value;
+        }
+
+        return normalized;
+    };
+
     const importData = async (backupJsonString, password = null, manualSalt = null) => {
         console.log("[Import] Starting process...");
         try {
@@ -518,7 +541,8 @@ export function AuthProvider({ children }) {
 
                 console.log("[Import] RESTORING DATA TO LOCAL STORAGE...");
                 // Restore items FIRST
-                for (const [key, value] of Object.entries(decryptedObj.data)) {
+                const importedData = normalizeImportedData(decryptedObj.data);
+                for (const [key, value] of Object.entries(importedData)) {
                     const reEncrypted = await encryptData(value, derivedKey);
                     localStorage.setItem(key, reEncrypted);
                     console.log(`[Import] Saved ${key}`);
@@ -569,7 +593,8 @@ export function AuthProvider({ children }) {
             }
 
             const mergeStats = { added: 0, skipped: 0 };
-            for (const [key, incomingValue] of Object.entries(decryptedObj.data)) {
+            const importedData = normalizeImportedData(decryptedObj.data);
+            for (const [key, incomingValue] of Object.entries(importedData)) {
                 // If the data is not an array, just overwrite (e.g. system settings)
                 if (!Array.isArray(incomingValue)) {
                     await updateData(key, incomingValue);
